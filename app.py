@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, url_for, flash, request, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from functools import wraps
 from datetime import datetime, timedelta
+import os
 from models import db, User, Pass, Reservation, Shoes, Payment
 from config import Config
 
@@ -210,6 +211,7 @@ def buy_pass():
             price=option['price']
         )
         db.session.add(new_pass)
+        db.session.flush()  # Flush to get the pass ID before creating payment
         
         # Create payment record
         payment = Payment(
@@ -346,6 +348,7 @@ def sell_pass():
             price=option['price']
         )
         db.session.add(new_pass)
+        db.session.flush()  # Flush to get the pass ID before creating payment
         
         # Create payment record
         payment = Payment(
@@ -450,4 +453,6 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Debug mode should be disabled in production
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
