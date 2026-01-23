@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Receptionist Dashboard - Boulder Gym{% endblock %}
+
+{% block content %}
+<h2>Receptionist Dashboard</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Today's Reservations</h5>
+                <p class="display-4">{{ reservations|length }}</p>
+                <a href="{{ url_for('search_bookings') }}" class="btn btn-primary">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Shoes Rented</h5>
+                <p class="display-4">{{ rented_shoes }} / {{ total_shoes }}</p>
+                <a href="{{ url_for('manage_shoes') }}" class="btn btn-primary">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">Quick Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('search_bookings') }}" class="btn btn-outline-primary">Search Bookings</a>
+                    <a href="{{ url_for('sell_pass') }}" class="btn btn-outline-success">Sell Pass</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h5>Today's Reservations</h5>
+        </div>
+        <div class="card-body">
+            {% if reservations %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations %}
+                            <tr>
+                                <td>{{ reservation.time_slot }}</td>
+                                <td>{{ reservation.user.username }} ({{ reservation.user.email }})</td>
+                                <td>
+                                    {% if reservation.status == 'confirmed' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                    {% elif reservation.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ reservation.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if reservation.status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('confirm_entry', reservation_id=reservation.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">Confirm Entry</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">Already confirmed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No reservations for today.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

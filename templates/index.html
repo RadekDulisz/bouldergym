@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Boulder Gym{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 text-center">
+        <h1 class="display-4">🧗 Welcome to Boulder Gym</h1>
+        <p class="lead mt-4">Your premier climbing gym reservation system</p>
+        
+        {% if not current_user.is_authenticated %}
+        <div class="mt-5">
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">Register</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
+        </div>
+        {% endif %}
+
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">For Climbers</h5>
+                        <ul class="list-unstyled text-start">
+                            <li>✓ Book climbing sessions</li>
+                            <li>✓ Purchase passes</li>
+                            <li>✓ View your bookings</li>
+                            <li>✓ Manage your account</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">For Staff</h5>
+                        <ul class="list-unstyled text-start">
+                            <li>✓ Manage bookings</li>
+                            <li>✓ Confirm entries</li>
+                            <li>✓ Sell passes</li>
+                            <li>✓ Handle shoe rentals</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

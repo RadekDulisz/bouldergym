@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Sell Pass - Boulder Gym{% endblock %}
+
+{% block content %}
+<h2>Sell Pass</h2>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Enter customer information</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Customer Username</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <small class="form-text text-muted">Enter the customer's username</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="pass_type" class="form-label">Pass Type</label>
+                        <select class="form-select" id="pass_type" name="pass_type" required>
+                            <option value="">Select pass type...</option>
+                            <option value="10-entry">10-Entry Pass - $100.00</option>
+                            <option value="20-entry">20-Entry Pass - $180.00</option>
+                            <option value="30-day">30-Day Pass - $150.00</option>
+                            <option value="90-day">90-Day Pass - $400.00</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Sell Pass</button>
+                    <a href="{{ url_for('receptionist_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Pass Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Entry-Based Passes</h6>
+                        <ul>
+                            <li><strong>10-Entry Pass:</strong> $100.00 - 10 climbing sessions</li>
+                            <li><strong>20-Entry Pass:</strong> $180.00 - 20 climbing sessions</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Time-Based Passes</h6>
+                        <ul>
+                            <li><strong>30-Day Pass:</strong> $150.00 - Unlimited for 30 days</li>
+                            <li><strong>90-Day Pass:</strong> $400.00 - Unlimited for 90 days</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
