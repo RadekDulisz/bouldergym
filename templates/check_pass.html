@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Check Pass - Boulder Gym{% endblock %}
+
+{% block content %}
+<h2>Check Pass for {{ user.username }}</h2>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5>User Information</h5>
+        <p><strong>Username:</strong> {{ user.username }}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Member since:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}</p>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header">
+        <h5>Passes</h5>
+    </div>
+    <div class="card-body">
+        {% if passes %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Purchase Date</th>
+                            <th>Status</th>
+                            <th>Remaining</th>
+                            <th>Expiry</th>
+                            <th>Valid</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pass in passes %}
+                        <tr>
+                            <td>{{ pass.pass_type }}</td>
+                            <td>{{ pass.purchase_date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if pass.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pass.entries_remaining %}
+                                    {{ pass.entries_remaining }} / {{ pass.entries_total }} entries
+                                {% else %}
+                                    Unlimited
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pass.expiry_date %}
+                                    {{ pass.expiry_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if pass.is_valid() %}
+                                    <span class="badge bg-success">✓ Valid</span>
+                                {% else %}
+                                    <span class="badge bg-danger">✗ Invalid</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>User has no passes.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{{ url_for('search_bookings') }}" class="btn btn-secondary">Back to Bookings</a>
+</div>
+{% endblock %}

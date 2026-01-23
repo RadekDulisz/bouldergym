@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}View Slots - Boulder Gym{% endblock %}
+
+{% block content %}
+<h2>Available Time Slots</h2>
+<p class="text-muted">Book your climbing session (requires a valid pass)</p>
+
+<div class="mt-4">
+    {% set current_date = None %}
+    {% for slot in slots %}
+        {% if slot.date != current_date %}
+            {% set current_date = slot.date %}
+            {% if not loop.first %}
+                </div></div>
+            {% endif %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>{{ slot.date.strftime('%A, %B %d, %Y') }}</h5>
+                </div>
+                <div class="card-body">
+        {% endif %}
+        
+        <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+            <div>
+                <strong>{{ slot.time_slot }}</strong>
+                <span class="ms-3">
+                    {% if slot.available %}
+                        <span class="badge bg-success">{{ slot.spots_left }} spots available</span>
+                    {% else %}
+                        <span class="badge bg-danger">Fully Booked</span>
+                    {% endif %}
+                </span>
+            </div>
+            {% if slot.available %}
+                <form method="POST" action="{{ url_for('book_entry') }}" style="display: inline;">
+                    <input type="hidden" name="date" value="{{ slot.date }}">
+                    <input type="hidden" name="time_slot" value="{{ slot.time_slot }}">
+                    <button type="submit" class="btn btn-sm btn-primary">Book</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        {% if loop.last %}
+            </div></div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}

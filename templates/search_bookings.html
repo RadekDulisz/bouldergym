@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Search Bookings - Boulder Gym{% endblock %}
+
+{% block content %}
+<h2>Search Bookings</h2>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <form method="POST">
+            <div class="row">
+                <div class="col-md-5">
+                    <label for="search_term" class="form-label">Search by Username or Email</label>
+                    <input type="text" class="form-control" id="search_term" name="search_term" placeholder="Enter username or email">
+                </div>
+                <div class="col-md-4">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="date">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if reservations is defined %}
+<div class="mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h5>Search Results ({{ reservations|length }} found)</h5>
+        </div>
+        <div class="card-body">
+            {% if reservations %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reservation in reservations %}
+                            <tr>
+                                <td>{{ reservation.id }}</td>
+                                <td>{{ reservation.reservation_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ reservation.time_slot }}</td>
+                                <td>{{ reservation.user.username }}</td>
+                                <td>{{ reservation.user.email }}</td>
+                                <td>
+                                    {% if reservation.status == 'confirmed' %}
+                                        <span class="badge bg-success">Confirmed</span>
+                                    {% elif reservation.status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ reservation.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if reservation.status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('confirm_entry', reservation_id=reservation.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">Confirm</button>
+                                        </form>
+                                    {% endif %}
+                                    <a href="{{ url_for('check_pass', user_id=reservation.user.id) }}" class="btn btn-sm btn-info">Check Pass</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No reservations found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

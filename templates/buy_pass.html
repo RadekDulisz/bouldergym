@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Buy Pass - Boulder Gym{% endblock %}
+
+{% block content %}
+<h2>Buy Pass</h2>
+<p class="text-muted">Choose a pass that suits your climbing schedule</p>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5>Entry-Based Passes</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6>10-Entry Pass</h6>
+                    <p class="text-muted">10 climbing sessions</p>
+                    <p class="h4">$100.00</p>
+                    <form method="POST">
+                        <input type="hidden" name="pass_type" value="10-entry">
+                        <button type="submit" class="btn btn-primary">Purchase</button>
+                    </form>
+                </div>
+                <hr>
+                <div>
+                    <h6>20-Entry Pass</h6>
+                    <p class="text-muted">20 climbing sessions</p>
+                    <p class="h4">$180.00</p>
+                    <form method="POST">
+                        <input type="hidden" name="pass_type" value="20-entry">
+                        <button type="submit" class="btn btn-primary">Purchase</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-3">
+            <div class="card-header bg-success text-white">
+                <h5>Time-Based Passes</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6>30-Day Pass</h6>
+                    <p class="text-muted">Unlimited climbing for 30 days</p>
+                    <p class="h4">$150.00</p>
+                    <form method="POST">
+                        <input type="hidden" name="pass_type" value="30-day">
+                        <button type="submit" class="btn btn-success">Purchase</button>
+                    </form>
+                </div>
+                <hr>
+                <div>
+                    <h6>90-Day Pass</h6>
+                    <p class="text-muted">Unlimited climbing for 90 days</p>
+                    <p class="h4">$400.00</p>
+                    <form method="POST">
+                        <input type="hidden" name="pass_type" value="90-day">
+                        <button type="submit" class="btn btn-success">Purchase</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{{ url_for('client_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+</div>
+{% endblock %}
