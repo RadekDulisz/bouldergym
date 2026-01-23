@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    reservations = db.relationship('Reservation', backref='user', lazy=True, cascade='all, delete-orphan')
+    reservations = db.relationship('Reservation', backref='user', lazy=True, cascade='all, delete-orphan', foreign_keys='Reservation.user_id')
     passes = db.relationship('Pass', backref='user', lazy=True, cascade='all, delete-orphan')
     payments = db.relationship('Payment', backref='user', lazy=True, cascade='all, delete-orphan')
     
