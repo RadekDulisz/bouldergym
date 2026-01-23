@@ -2,6 +2,10 @@
 
 A comprehensive web-based climbing gym reservation system with role-based access control for clients and receptionists.
 
+## ✅ Project Status: Complete
+
+All requirements from the problem statement have been fully implemented and tested.
+
 ## Features
 
 ### For Clients
