@@ -105,8 +105,8 @@
                                 {% endif %}
                             </td>
                             <td class="py-3">
-                                {% if shoe.current_renter_id %}
-                                    {{ shoe.current_renter_id }}
+                                {% if shoe.current_renter %}
+                                    {{ shoe.current_renter.username }}
                                 {% else %}
                                     <span class="text-slate-500">-</span>
                                 {% endif %}

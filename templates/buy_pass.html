@@ -8,6 +8,25 @@
     <p class="text-slate-400 text-lg">Pick the perfect pass for your climbing lifestyle</p>
 </div>
 
+{% if active_passes %}
+<div class="bg-blue-900/30 border border-blue-700 rounded-xl p-6 mb-8">
+    <h3 class="text-lg font-bold text-blue-400 mb-4">✓ Your Active Passes</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+        {% for pass in active_passes %}
+        <div class="bg-blue-950 border border-blue-700 rounded-lg p-4">
+            <p class="font-bold text-white">{{ pass.pass_type }}</p>
+            {% if pass.entries_remaining %}
+                <p class="text-blue-300 text-sm">{{ pass.entries_remaining }} / {{ pass.entries_total }} entries remaining</p>
+            {% endif %}
+            {% if pass.expiry_date %}
+                <p class="text-blue-300 text-sm">Expires: {{ pass.expiry_date.strftime('%Y-%m-%d') }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
     
@@ -49,8 +68,8 @@
             
             <form method="POST" class="w-full">
                 <input type="hidden" name="pass_type" value="10-entry">
-                <button type="submit" class="w-full px-4 py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-orange-500/20">
-                    Get Started
+                <button type="submit" {% if has_active_pass %}disabled{% endif %} class="w-full px-4 py-3 {% if has_active_pass %}bg-gray-600 cursor-not-allowed opacity-50{% else %}bg-orange-600 hover:bg-orange-500{% endif %} text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-orange-500/20">
+                    {% if has_active_pass %}Already Have a Pass{% else %}Get Started{% endif %}
                 </button>
             </form>
         </div>
@@ -100,8 +119,8 @@
             
             <form method="POST" class="w-full">
                 <input type="hidden" name="pass_type" value="20-entry">
-                <button type="submit" class="w-full px-4 py-3 bg-orange-600 hover:bg-orange-500 text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-orange-500/20">
-                    Get Started
+                <button type="submit" {% if has_active_pass %}disabled{% endif %} class="w-full px-4 py-3 {% if has_active_pass %}bg-gray-600 cursor-not-allowed opacity-50{% else %}bg-orange-600 hover:bg-orange-500{% endif %} text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-orange-500/20">
+                    {% if has_active_pass %}Already Have a Pass{% else %}Get Started{% endif %}
                 </button>
             </form>
         </div>
@@ -146,8 +165,8 @@
             
             <form method="POST" class="w-full">
                 <input type="hidden" name="pass_type" value="30-day">
-                <button type="submit" class="w-full px-4 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-green-500/20">
-                    Get Started
+                <button type="submit" {% if has_active_pass %}disabled{% endif %} class="w-full px-4 py-3 {% if has_active_pass %}bg-gray-600 cursor-not-allowed opacity-50{% else %}bg-green-600 hover:bg-green-500{% endif %} text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-green-500/20">
+                    {% if has_active_pass %}Already Have a Pass{% else %}Get Started{% endif %}
                 </button>
             </form>
         </div>
@@ -192,8 +211,8 @@
             
             <form method="POST" class="w-full">
                 <input type="hidden" name="pass_type" value="90-day">
-                <button type="submit" class="w-full px-4 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-green-500/20">
-                    Get Started
+                <button type="submit" {% if has_active_pass %}disabled{% endif %} class="w-full px-4 py-3 {% if has_active_pass %}bg-gray-600 cursor-not-allowed opacity-50{% else %}bg-green-600 hover:bg-green-500{% endif %} text-white font-bold rounded-lg transition-all transform hover:shadow-lg hover:shadow-green-500/20">
+                    {% if has_active_pass %}Already Have a Pass{% else %}Get Started{% endif %}
                 </button>
             </form>
         </div>

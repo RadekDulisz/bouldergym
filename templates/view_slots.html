@@ -83,6 +83,14 @@
     const allSlots = {{ slots | tojson }};
     
     let weekOffset = 0;
+
+    // Format a date as YYYY-MM-DD in local time (avoid UTC shift)
+    function formatDateLocal(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
     
     // Always get today's date dynamically
     function getToday() {
@@ -137,7 +145,7 @@
             slotDate.setHours(0, 0, 0, 0);
             
             if (slotDate >= weekStart && slotDate <= weekEnd) {
-                const dateStr = slotDate.toISOString().split('T')[0];
+                const dateStr = formatDateLocal(slotDate);
                 if (!daySlots[dateStr]) {
                     daySlots[dateStr] = [];
                 }
@@ -149,7 +157,7 @@
         for (let i = 0; i < 7; i++) {
             const dayDate = new Date(weekStart);
             dayDate.setDate(weekStart.getDate() + i);
-            const dateStr = dayDate.toISOString().split('T')[0];
+            const dateStr = formatDateLocal(dayDate);
             
             const dayCard = document.createElement('div');
             dayCard.className = 'bg-slate-800 border border-slate-700 rounded-lg overflow-hidden hover:border-orange-500 transition';

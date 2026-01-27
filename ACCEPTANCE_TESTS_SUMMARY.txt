@@ -1,0 +1,347 @@
+Testy Akceptacyjne - Boulder Gym Application
+
+Omówienie Testów Akceptacyjnych (Acceptance Testing Overview)
+
+Czym są testy akceptacyjne?
+Testy akceptacyjne (UAT - User Acceptance Testing) to ostatni etap testowania przed wdrożeniem systemu. 
+Weryfikują one, czy aplikacja spełnia wymagania biznesowe i czy jest gotowa do użycia przez końcowych 
+użytkowników. Testy są pisane w języku zrozumiałym dla interesariuszy biznesowych.
+
+Narzędzia i Framework
+- Framework testowy: Behave (BDD - Behavior Driven Development)
+- Język scenariuszy: Gherkin (Given-When-Then) w języku polskim
+- Narzędzie automatyzacji: Selenium WebDriver
+- Przeglądarka: Chrome (headless mode)
+- Język implementacji: Python 3.12
+
+Struktura Testów (Test Structure)
+
+features/
+  ├── environment.py                  Konfiguracja środowiska testowego
+  ├── registration.feature            Testy rejestracji użytkownika
+  ├── login.feature                   Testy logowania
+  ├── pass_purchase.feature           Testy zakupu karnetów
+  ├── reservation.feature             Testy rezerwacji slotów
+  ├── receptionist.feature            Testy funkcji recepcjonisty
+  ├── shoes_rental.feature            Testy wypożyczania butów
+  └── steps/
+      ├── common_steps.py             Wspólne kroki testowe
+      ├── user_steps.py               Kroki związane z użytkownikami
+      ├── pass_steps.py               Kroki zakupu karnetów
+      ├── reservation_steps.py        Kroki rezerwacji
+      ├── receptionist_steps.py       Kroki recepcjonisty
+      └── shoes_steps.py              Kroki wypożyczania butów
+
+Scenariusze Testowe (Test Scenarios)
+
+1. Rejestracja (registration.feature) - 2 scenariusze
+   ✓ Pomyślna rejestracja nowego klienta
+   ✓ Rejestracja z istniejącą nazwą użytkownika (błąd)
+
+2. Logowanie (login.feature) - 3 scenariusze
+   ✓ Pomyślne logowanie klienta
+   ✓ Pomyślne logowanie recepcjonisty
+   ✓ Logowanie z błędnym hasłem (błąd)
+
+3. Zakup Karnetu (pass_purchase.feature) - 3 scenariusze
+   ✓ Zakup karnetu 10-wejściowego
+   ✓ Zakup karnetu 30-dniowego
+   ✓ Próba zakupu drugiego karnetu gdy użytkownik ma już aktywny
+
+4. Rezerwacja (reservation.feature) - 3 scenariusze
+   ✓ Pomyślna rezerwacja wolnego slotu
+   ✓ Próba rezerwacji bez karnetu (błąd)
+   ✓ Przeglądanie dostępnych slotów
+
+5. Zarządzanie Rezerwacjami - Recepcjonista (receptionist.feature) - 4 scenariusze
+   ✓ Potwierdzanie rezerwacji klienta
+   ✓ Odrzucanie rezerwacji
+   ✓ Wyszukiwanie rezerwacji po użytkowniku
+   ✓ Sortowanie rezerwacji według statusu pending
+
+6. Wypożyczanie Butów (shoes_rental.feature) - 3 scenariusze
+   ✓ Dodawanie nowych butów do inwentarza
+   ✓ Wypożyczanie butów klientowi
+   ✓ Zwrot wypożyczonych butów
+
+ŁĄCZNIE: 18 scenariuszy akceptacyjnych
+
+Przykłady Scenariuszy w Gherkin
+
+=== SCENARIUSZ 1: Pomyślna Rejestracja ===
+
+Funkcja: Rejestracja nowego użytkownika
+  Jako potencjalny klient siłowni
+  Chcę móc zarejestrować nowe konto
+  Aby móc korzystać z systemu rezerwacji
+
+  Scenariusz: Pomyślna rejestracja nowego klienta
+    Zakładając że otwieram stronę główną aplikacji
+    Kiedy klikam w link "Register"
+    I wypełniam pole "username" wartością "jankowalski"
+    I wypełniam pole "email" wartością "jan.kowalski@example.com"
+    I wypełniam pole "password" wartością "bezpieczne123"
+    I wybieram rolę "client"
+    I klikam przycisk "Register"
+    Wtedy powinienem zobaczyć komunikat "Registration successful"
+    I powinienem być przekierowany na stronę logowania
+
+KROK-PO-KROKU:
+1. Użytkownik otwiera stronę główną
+2. Klika link "Register"
+3. Wypełnia formularz rejestracyjny
+4. Klika przycisk rejestracji
+5. System wyświetla komunikat sukcesu
+6. Użytkownik jest przekierowywany na stronę logowania
+
+OCZEKIWANY WYNIK: 
+- Nowe konto zostało utworzone w bazie danych
+- Hasło jest zahashowane
+- Użytkownik widzi komunikat potwierdzenia
+- Użytkownik może się zalogować nowym kontem
+
+=== SCENARIUSZ 2: Zakup Karnetu ===
+
+Funkcja: Zakup karnetu
+  Jako zalogowany klient
+  Chcę móc kupić karnet wstępu
+  Aby móc rezerwować wizyty na siłowni
+
+  Kontekst:
+    Zakładając że jestem zalogowany jako klient "testclient"
+
+  Scenariusz: Zakup karnetu 10-wejściowego
+    Kiedy przechodzę do strony zakupu karnetów
+    I wybieram karnet "10-entry"
+    I klikam przycisk zakupu
+    Wtedy powinienem zobaczyć komunikat "Successfully purchased"
+    I powinienem mieć aktywny karnet "10-entry" z 10 wejściami
+
+KROK-PO-KROKU:
+1. Klient jest zalogowany w systemie
+2. Przechodzi do strony /client/buy-pass
+3. Wybiera karnet 10-wejściowy (cena 100 zł)
+4. Klika przycisk zakupu
+5. System przetwarza transakcję
+6. Karnet jest dodawany do konta klienta
+7. Płatność jest rejestrowana
+
+OCZEKIWANY WYNIK:
+- Karnet 10-entry jest aktywny
+- Pozostało 10 wejść
+- Płatność 100 zł została zapisana
+- Klient widzi komunikat sukcesu
+
+=== SCENARIUSZ 3: Potwierdzanie Wejścia ===
+
+Funkcja: Zarządzanie rezerwacjami przez recepcjonistę
+  Jako recepcjonista
+  Chcę móc zarządzać rezerwacjami klientów
+  Aby kontrolować wejścia na siłownię
+
+  Kontekst:
+    Zakładając że jestem zalogowany jako recepcjonista
+
+  Scenariusz: Potwierdzanie rezerwacji klienta
+    Zakładając że istnieje oczekująca rezerwacja dla użytkownika "testclient"
+    Kiedy przechodzę do dashboardu recepcjonisty
+    I znajduję rezerwację użytkownika "testclient"
+    I klikam przycisk "Confirm"
+    Wtedy powinienem zobaczyć komunikat "Entry confirmed successfully"
+    I status rezerwacji powinien zmienić się na "Confirmed"
+
+KROK-PO-KROKU:
+1. Recepcjonista jest zalogowany
+2. Otwiera dashboard z listą rezerwacji
+3. Znajduje rezerwację klienta "testclient" ze statusem "Pending"
+4. Klika przycisk "Confirm"
+5. System weryfikuje ważność karnetu klienta
+6. Odejmuje 1 wejście z karnetu
+7. Zmienia status rezerwacji na "Confirmed"
+8. Wyświetla komunikat sukcesu
+
+OCZEKIWANY WYNIK:
+- Status rezerwacji: Confirmed
+- Liczba wejść klienta zmniejszona o 1
+- Pole confirmed_by zawiera ID recepcjonisty
+- Klient może wejść na siłownię
+
+Korzyści z Testów Akceptacyjnych
+
+1. KOMUNIKACJA Z BIZNESEM
+   - Scenariusze w języku naturalnym (polski)
+   - Zrozumiałe dla interesariuszy bez wiedzy technicznej
+   - Dokumentacja wymagań biznesowych
+
+2. WERYFIKACJA WYMAGAŃ
+   - Sprawdzenie czy aplikacja robi to czego oczekują użytkownicy
+   - Testy end-to-end z perspektywy użytkownika
+   - Symulacja rzeczywistych przypadków użycia
+
+3. AUTOMATYZACJA
+   - Możliwość wielokrotnego uruchomienia
+   - Regresja - sprawdzenie czy nowe zmiany nie zepsuły istniejących funkcji
+   - Szybkie wykrywanie problemów przed wdrożeniem
+
+4. DOKUMENTACJA ŻYWA
+   - Scenariusze są jednocześnie testami i dokumentacją
+   - Zawsze aktualne (inaczej testy nie przejdą)
+   - Przykłady użycia systemu
+
+Format Gherkin (Given-When-Then)
+
+Given (Zakładając że) - Warunki początkowe
+  - Stan systemu przed testem
+  - Zalogowanie użytkownika
+  - Przygotowanie danych testowych
+
+When (Kiedy) - Akcje użytkownika
+  - Co użytkownik robi
+  - Kliknięcia, wypełnianie formularzy
+  - Nawigacja po systemie
+
+Then (Wtedy) - Oczekiwane rezultaty
+  - Co powinno się stać
+  - Komunikaty, zmiany stanu
+  - Walidacja wyników
+
+Jak Uruchomić Testy Akceptacyjne
+
+INSTALACJA:
+pip install -r requirements-acceptance.txt
+
+UWAGA: Testy wymagają Chrome WebDriver
+- Testy używają Selenium do automatyzacji przeglądarki
+- Chrome musi być zainstalowany
+- WebDriver jest pobierany automatycznie przez selenium-manager
+
+URUCHOMIENIE WSZYSTKICH TESTÓW:
+behave
+
+URUCHOMIENIE KONKRETNEJ FUNKCJI:
+behave features/registration.feature
+
+URUCHOMIENIE KONKRETNEGO SCENARIUSZA:
+behave features/login.feature:8
+
+TRYB VERBOSE (szczegółowe logi):
+behave -v
+
+GENEROWANIE RAPORTU:
+behave --format json -o report.json
+
+Różnice: Testy Jednostkowe vs Akceptacyjne
+
+TESTY JEDNOSTKOWE (pytest):
+- Perspektywa: Programista
+- Poziom: Funkcje, metody, klasy
+- Język: Kod Python
+- Szybkość: Bardzo szybkie (sekundy)
+- Izolacja: Pełna (mock, in-memory DB)
+- Cel: Weryfikacja poprawności kodu
+
+TESTY AKCEPTACYJNE (behave):
+- Perspektywa: Użytkownik końcowy
+- Poziom: Pełne przepływy biznesowe
+- Język: Gherkin (język naturalny)
+- Szybkość: Wolniejsze (minuty)
+- Izolacja: Minimalna (prawdziwa przeglądarka)
+- Cel: Weryfikacja wymagań biznesowych
+
+Przykładowe Kroki Implementacyjne (Step Definitions)
+
+@given('jestem zalogowany jako klient "{username}"')
+def step_logged_in_as_client(context, username):
+    # Tworzy użytkownika w bazie
+    # Otwiera stronę logowania
+    # Wypełnia formularz
+    # Klika przycisk login
+    context.driver.get(context.base_url + '/login')
+    context.driver.find_element(By.NAME, 'username').send_keys(username)
+    context.driver.find_element(By.NAME, 'password').send_keys('test123')
+    context.driver.find_element(By.XPATH, "//button[text()='Login']").click()
+
+@when('klikam przycisk "{button_text}"')
+def step_click_button(context, button_text):
+    # Czeka aż przycisk będzie klikalny
+    # Klika przycisk
+    button = WebDriverWait(context.driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, f"//button[text()='{button_text}']"))
+    )
+    button.click()
+
+@then('powinienem zobaczyć komunikat "{message}"')
+def step_see_message(context, message):
+    # Sprawdza czy komunikat jest na stronie
+    page_source = context.driver.page_source
+    assert message in page_source
+
+Pokrycie Testami Akceptacyjnymi
+
+FUNKCJONALNOŚCI KLIENTA (10 scenariuszy):
+✓ Rejestracja nowego konta
+✓ Logowanie do systemu
+✓ Zakup karnetu wejściowego
+✓ Zakup karnetu czasowego
+✓ Blokada zakupu drugiego karnetu
+✓ Przeglądanie dostępnych slotów
+✓ Rezerwacja slotu
+✓ Blokada rezerwacji bez karnetu
+✓ Wyświetlanie moich rezerwacji
+✓ Wylogowanie
+
+FUNKCJONALNOŚCI RECEPCJONISTY (8 scenariuszy):
+✓ Logowanie do systemu
+✓ Przeglądanie listy rezerwacji
+✓ Potwierdzanie rezerwacji (odejmowanie wejść)
+✓ Odrzucanie rezerwacji
+✓ Wyszukiwanie rezerwacji po użytkowniku
+✓ Sortowanie rezerwacji (pending first)
+✓ Dodawanie butów do inwentarza
+✓ Wypożyczanie i zwracanie butów
+
+Zalecenia (Recommendations)
+
+1. ROZSZERZENIE TESTÓW
+   - Dodać testy dla przypadków brzegowych (edge cases)
+   - Testy negatywne (próby nieuprawnionego dostępu)
+   - Testy wydajnościowe (wiele równoczesnych użytkowników)
+
+2. INTEGRACJA Z CI/CD
+   - Automatyczne uruchamianie przed wdrożeniem
+   - Blokowanie merge jeśli testy nie przechodzą
+   - Raporty w Jenkins/GitLab CI/GitHub Actions
+
+3. ROZSZERZENIE SCENARIUSZY
+   - Testy mobilne (responsive design)
+   - Testy różnych przeglądarek (Firefox, Safari, Edge)
+   - Testy dostępności (WCAG)
+
+4. MONITOROWANIE
+   - Metryki: czas wykonania testów
+   - Historia: trendy sukcesu/porażki
+   - Alerty: powiadomienia o niepowodzeniach
+
+Wnioski (Conclusions)
+
+Testy akceptacyjne dla aplikacji Boulder Gym zostały przygotowane używając framework'a Behave 
+z wykorzystaniem języka Gherkin w polskiej wersji językowej. 
+
+18 scenariuszy testowych pokrywa kluczowe funkcjonalności systemu z perspektywy użytkownika:
+- Rejestracja i autentykacja
+- Zakup i zarządzanie karnetami
+- Rezerwacje i potwierdzenia wejść
+- Zarządzanie inwentarzem (buty)
+
+Testy są napisane w sposób zrozumiały dla interesariuszy biznesowych i mogą służyć 
+jako dokumentacja systemu. Automatyzacja z użyciem Selenium pozwala na regularne 
+uruchamianie testów i wczesne wykrywanie problemów.
+
+Zaleta podejścia BDD (Behavior Driven Development):
+- Testy są specyfikacją wymagań
+- Współpraca programistów, testerów i biznesu
+- Dokumentacja zawsze aktualna
+- Łatwe dodawanie nowych scenariuszy
+
+System testów akceptacyjnych jest gotowy do użycia i może być rozszerzany o kolejne 
+scenariusze w miarę rozwoju aplikacji.

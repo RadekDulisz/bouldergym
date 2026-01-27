@@ -1,0 +1,984 @@
+================================================================================
+  ANALIZA SYSTEMU BOULDER GYM MANAGEMENT SYSTEM
+  Aplikacja do zarządzania halą wspinaczkową i rezerwacji wejść
+================================================================================
+
+Autorzy i Data:
+  System Analizy: Boulder Gym Management System v1.0
+  Data opracowania: 27 stycznia 2026
+  Autor: GitHub Copilot
+
+================================================================================
+1. CHARAKTERYSTYKA WYCINKA ŚWIATA RZECZYWISTEGO
+================================================================================
+
+1.1. OBIEKTY ŚWIATA RZECZYWISTEGO
+
+System Boulder Gym zarządza halą wspinaczkową - obiektem sportowym, w którym
+klienci uczestniczą w zajęciach wspinaczki. Głównymi obiektami rzeczywistymi
+są:
+
+  a) Użytkownicy systemu:
+     - Klienci (Climbers) - osoby chcące wspinać się na ścianie wspinaczkowej
+     - Recepcjoniści (Staff) - pracownicy obsługujący wejścia i rezerwacje
+     
+  b) Karty/Karnety wstępu:
+     - Karnet 10-wejściowy (10-Entry Pass) - 100 PLN, umożliwia 10 wejść
+     - Karnet 30-dniowy (30-Day Pass) - 150 PLN, ważny przez 30 dni
+     - Karnet czasowy i wejściowy - różne warianty dostępu
+     
+  c) Sloty czasowe (Time Slots):
+     - Określone godziny otwarcia hali do wspinaczki
+     - Ograniczona pojemność każdego slotu (liczba osób)
+     - Rozkład godzinowy (np. 9:00-10:30, 10:30-12:00, itp.)
+     
+  d) Rezerwacje wejść:
+     - Zarezerwowanie konkretnego slotu na określoną datę
+     - Status rezerwacji: Pending (oczekująca), Confirmed (potwierdzona), 
+       Declined (odrzucona)
+     - Potwierdzenie przez recepcjonistę podczas wejścia
+     
+  e) Wyposażenie - Buty wspinaczkowe:
+     - Buty do wypożyczenia dla klientów
+     - Rozmiary: 36-48
+     - Stan: dobre, średnie, do naprawy
+     - Dostępność: dostępne, wypożyczone
+
+
+1.2. POWIĄZANIA I RELACJE
+
+  RELACJA: Użytkownik → Karnet (1:N)
+  Jeden klient może mieć wiele karnetów (ale tylko jeden aktywny jednocześnie).
+  Każdy karnet należy do dokładnie jednego użytkownika.
+  
+  RELACJA: Użytkownik → Rezerwacja (1:N)
+  Jeden klient może mieć wiele rezerwacji na różne daty i sloty.
+  Każda rezerwacja dotyczy dokładnie jednego użytkownika.
+  
+  RELACJA: Karnet → Rezerwacja (1:N)
+  Klient musi posiadać aktywny karnet, aby dokonać rezerwacji.
+  Potwierdzenie rezerwacji powoduje zmniejszenie liczby wejść z karnetu.
+  
+  RELACJA: Recepcjonista → Rezerwacja (1:N)
+  Recepcjonista potwierdza lub odrzuca rezerwacje.
+  Pole "confirmed_by" w rezerwacji zawiera ID recepcjonisty.
+  
+  RELACJA: Użytkownik → Buty (1:N)
+  Klient może wypożyczać buty jednorazowo.
+  Recepcjonista przypisuje buty do użytkownika podczas wypożyczenia.
+  
+  RELACJA: Użytkownik → Płatność (1:N)
+  Każda transakcja (zakup karnetu, wynajęcie) tworzy wpis płatności.
+  Historia płatności jest powiązana z użytkownikiem.
+
+
+1.3. ZACHODZĄCE PROCESY
+
+  Proces 1: REJESTRACJA I AUTENTYKACJA
+  ├─ Użytkownik wpisuje dane (username, email, hasło, rola)
+  ├─ System weryfikuje unikalność nazwy użytkownika i email
+  ├─ Hasło jest zahashowane (nie przechowywane w postaci czystej)
+  ├─ Nowy użytkownik jest zapisywany w bazie danych
+  └─ Użytkownik loguje się przy użyciu username i hasła
+
+  Proces 2: ZAKUP KARNETU
+  ├─ Klient zaloguje się do systemu
+  ├─ Przechodzi do sekcji "Buy Pass"
+  ├─ Wybiera typ karnetu (10-entry lub 30-day)
+  ├─ System sprawdza, czy klient ma już aktywny karnet
+  ├─ Jeśli nie ma - procesuje zakup i tworzy nowy karnet
+  ├─ Tworzy wpis płatności z kwotą i datą
+  ├─ Wyświetla komunikat sukcesu
+  └─ Karnet staje się dostępny w dashboardzie klienta
+
+  Proces 3: REZERWACJA SLOTU
+  ├─ Klient przegląda dostępne sloty czasowe
+  ├─ Wybiera interesujący go slot (data + godzina)
+  ├─ System weryfikuje, czy klient ma aktywny karnet
+  ├─ Tworzy rezerwację ze statusem "Pending"
+  ├─ Rezerwacja pojawia się w dashboardzie klienta
+  ├─ Wejścia z karnetu nie są jeszcze odjęte
+  └─ Recepcjonista może potwiedzić lub odrzucić rezerwację
+
+  Proces 4: POTWIERDZENIE WEJŚCIA (RECEPTION)
+  ├─ Recepcjonista loguje się do systemu
+  ├─ Przegląda listę rezerwacji "Pending"
+  ├─ Klient przychodzi do hali i mówi recepcjoniście
+  ├─ Recepcjonista klika "Confirm" przy rezerwacji
+  ├─ System odejmuje 1 wejście z aktywnego karnetu klienta
+  ├─ Status rezerwacji zmienia się na "Confirmed"
+  ├─ Pole "confirmed_by" zawiera ID recepcjonisty
+  └─ Klient może wejść na halę wspinaczkową
+
+  Proces 5: ODRZUCENIE REZERWACJI
+  ├─ Recepcjonista klika "Decline" przy rezerwacji
+  ├─ Status rezerwacji zmienia się na "Declined"
+  ├─ Wejścia klienta NIE są odjęte
+  ├─ Rezerwacja pozostaje w historii klienta
+  └─ Klient może dokonać nowej rezerwacji na inny slot
+
+  Proces 6: WYPOŻYCZENIE BUTÓW
+  ├─ Recepcjonista przechodzi do "Manage Shoes"
+  ├─ Znajduje buty ze statusem "Available"
+  ├─ Wpisuje username klienta
+  ├─ Klika "Rent"
+  ├─ Status butów zmienia się na "Rented"
+  ├─ Pole "Rented To" zawiera username klienta
+  └─ Klient otrzymuje buty na hali
+
+  Proces 7: ZWROT BUTÓW
+  ├─ Klient zwraca buty recepcjoniście
+  ├─ Recepcjonista klika "Return" przy butach
+  ├─ Sprawdza stan butów (dobre/średnie/do naprawy)
+  ├─ Status zmienia się na "Available"
+  ├─ Pole "Rented To" jest czyszczone
+  └─ Buty są dostępne do ponownego wypożyczenia
+
+
+1.4. DIAGRAM ILUSTRUJĄCY DZIAŁANIE SYSTEMU
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    BOULDER GYM MANAGEMENT SYSTEM                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+                          ┌──────────────────┐
+                          │   STRONA GŁÓWNA  │
+                          └────────┬─────────┘
+                                   │
+                ┌──────────────────┬┴───────────────────┐
+                │                  │                    │
+         ┌──────▼────────┐  ┌──────▼────────┐  ┌───────▼──────┐
+         │   REJESTRACJA │  │    LOGOWANIE  │  │ INFORMACJE   │
+         └─────┬────────┘  └──────┬────────┘  └──────────────┘
+               │                  │
+               └──────────┬───────┘
+                          │
+         ┌────────────────▼─────────────────┐
+         │  UŻYTKOWNIK ZALOGOWANY           │
+         └────────────────┬─────────────────┘
+                          │
+        ┌─────────────────┴──────────────────┐
+        │                                    │
+    ┌───▼───────────┐           ┌───────────▼─────┐
+    │   KLIENT      │           │ RECEPCJONISTA   │
+    └───┬───────────┘           └───────┬─────────┘
+        │                               │
+    ┌───┴─────────────────────┐   ┌─────▼──────────────────┐
+    │                         │   │                        │
+┌───▼────────┐ ┌────────────┐ │ ┌─▼──────────┐ ┌─────────────┐
+│ BUY PASS   │ │VIEW SLOTS  │ │ │DASHBOARD   │ │MANAGE SHOES │
+│            │ │            │ │ │RECEPTION   │ │             │
+│10-entry    │ │-Date       │ │ │-Pending    │ │-Add Shoes   │
+│30-day      │ │-Time       │ │ │-Confirm    │ │-Rent Shoes  │
+│            │ │-Capacity   │ │ │-Decline    │ │-Return Shoes│
+└───┬────────┘ │            │ │ │-Search     │ │             │
+    │          │            │ │ │-Sort       │ │             │
+    │          └────┬───────┘ │ └─┬──────────┘ └─────────────┘
+    │               │         │   │
+    │          ┌────▼────┐    │   │
+    │          │BOOKING  │    │   │
+    │          │SLOT     │    │   │
+    │          └────┬────┘    │   │
+    │               │         │   │
+    │         ┌─────▼─────────▼───▼──────┐
+    │         │  DATABASE (SQLite)       │
+    │         ├──────────────────────────┤
+    │         │ · Users (clients, staff) │
+    │         │ · Passes (10-entry, etc) │
+    │         │ · Reservations (pending) │
+    │         │ · Shoes (available)      │
+    │         │ · Payments (transactions)│
+    │         └──────────────────────────┘
+    │
+    └─ Karnet + Wejścia
+       └─ Rezerwacja → Potwierdzenie → Wejście
+
+
+1.5. PRZEPŁYW DANYCH
+
+SCENARIUSZ: Klient rezerwuje i potwierdza wejście
+
+┌─────────────┐
+│ KLIENT      │
+├─────────────┤
+│ Username    │
+│ Email       │
+│ Hasło (hash)│
+│ Rola: client│
+└──────┬──────┘
+       │
+       ├─ Kupuje karnet
+       │  └─ Tworzy Pass (type: "10-entry", entries: 10)
+       │
+       ├─ Rezerwuje slot
+       │  └─ Tworzy Reservation (status: "pending")
+       │
+       └─ Czeka na potwierdzenie
+          └─ Recepcjonista potwierdza
+             ├─ Rezerwacja → status: "confirmed"
+             ├─ Pass → entries: 9 (zmniejsza się o 1)
+             └─ Wejście klienta: autoryzowane
+
+
+================================================================================
+2. FUNKCJE PROJEKTOWANEJ APLIKACJI
+================================================================================
+
+2.1. WYMAGANIA FUNKCJONALNE
+
+MODUŁ 1: AUTENTYKACJA I AUTORYZACJA
+  F1.1: Rejestracja nowego użytkownika
+        - Input: username, email, hasło, rola (client/receptionist)
+        - Walidacja: unikalność username i email
+        - Output: Konto utworzone, hasło zahashowane
+        - Błąd: "Username already exists" / "Email already exists"
+
+  F1.2: Logowanie użytkownika
+        - Input: username, hasło
+        - Weryfikacja: sprawdzenie hasła
+        - Output: Sesja aktywna, przekierowanie do dashboardu
+        - Błąd: "Invalid username or password"
+
+  F1.3: Wylogowanie użytkownika
+        - Input: żądanie logout
+        - Działanie: zakończenie sesji
+        - Output: Przekierowanie do strony głównej
+
+  F1.4: Kontrola dostępu według roli
+        - Klienci: /client/*, brak dostępu do /receptionist/*
+        - Recepcjoniści: /receptionist/*, brak dostępu do /client/*
+        - Output: 403 Forbidden lub redirect dla nieuprawnionych
+
+
+MODUŁ 2: ZARZĄDZANIE KARNETAMI
+  F2.1: Zakup karnetu
+        - Input: typ karnetu (10-entry, 30-day)
+        - Walidacja: klient nie ma już aktywnego karnetu
+        - Output: Nowy karnet, wpis płatności, komunikat sukcesu
+        - Ceny: 10-entry = 100 PLN, 30-day = 150 PLN
+
+  F2.2: Wyświetlanie aktywnego karnetu
+        - Input: ID użytkownika
+        - Output: Typ karnetu, liczba wejść, datę wygaśnięcia
+        - Akcja: aktualizacja co każdym potwierdzeniu rezerwacji
+
+  F2.3: Walidacja karnetu
+        - Sprawdzenie: czy karnet jest aktywny
+        - Sprawdzenie: czy nie wygasł (30-day)
+        - Sprawdzenie: czy ma pozostałe wejścia (10-entry)
+        - Output: true/false
+
+  F2.4: Odejmowanie wejść
+        - Przy potwierdzeniu rezerwacji: entries_remaining -= 1
+        - Jeśli entries_remaining = 0: karnet deaktywowany
+        - Output: zaktualizowany karnet
+
+
+MODUŁ 3: REZERWACJE
+  F3.1: Wyświetlanie dostępnych slotów
+        - Input: data (opcjonalnie)
+        - Output: lista slotów z datą, godziną, pojemnością
+        - Filtrowanie: tylko przyszłe sloty
+
+  F3.2: Rezerwacja slotu
+        - Input: user_id, slot_id, data, godzina
+        - Walidacja: klient ma aktywny karnet
+        - Walidacja: slot nie jest zapełniony
+        - Output: Rezerwacja ze statusem "pending"
+        - Błąd: "You need a valid pass to book"
+
+  F3.3: Wyświetlanie moich rezerwacji (klient)
+        - Input: user_id
+        - Output: lista rezerwacji (pending, confirmed, declined)
+        - Sortowanie: po dacie rezerwacji (najnowsze pierwsze)
+
+  F3.4: Wyświetlanie wszystkich rezerwacji (recepcjonista)
+        - Input: (opcjonalnie) username, status, data
+        - Output: lista rezerwacji wszystkich klientów
+        - Sortowanie: Pending first
+
+  F3.5: Wyszukiwanie rezerwacji po username
+        - Input: część nazwy użytkownika
+        - Output: rezerwacje pasujące do kryteria
+        - Funkcjonalność: filtrowanie dynamiczne
+
+  F3.6: Potwierdzenie rezerwacji
+        - Input: reservation_id
+        - Działania:
+          • Zmiana statusu: pending → confirmed
+          • Zapisanie ID recepcjonisty
+          • Odjęcie 1 wejścia z karnetu
+          • Wysłanie komunikatu do klienta
+        - Output: "Entry confirmed successfully"
+
+  F3.7: Odrzucenie rezerwacji
+        - Input: reservation_id
+        - Działania:
+          • Zmiana statusu: pending → declined
+          • Wejścia klienta NIE są odjęte
+          • Rezerwacja pozostaje w historii
+        - Output: "Reservation declined"
+
+
+MODUŁ 4: ZARZĄDZANIE BUTAMI
+  F4.1: Dodawanie butów do inwentarza
+        - Input: rozmiar (36-48)
+        - Output: nowe buty ze statusem "available"
+        - Działanie: rejestracja w systemie
+
+  F4.2: Wyświetlanie inventarza butów
+        - Input: (opcjonalnie) rozmiar, status
+        - Output: lista butów z rozmiarami i statusami
+        - Sortowanie: dostępne najpierw
+
+  F4.3: Wypożyczanie butów
+        - Input: shoe_id, username
+        - Walidacja: buty są dostępne
+        - Walidacja: użytkownik istnieje
+        - Output: Buty przypisane do użytkownika
+        - Zmiana statusu: available → rented
+
+  F4.4: Zwrot butów
+        - Input: shoe_id
+        - Działania:
+          • Zmiana statusu: rented → available
+          • Wyczyszczenie pola "rented_to"
+          • Opcja: ocena stanu butów
+        - Output: "Shoes returned successfully"
+
+
+MODUŁ 5: RAPORTY I STATYSTYKI (OPCJONALNIE)
+  F5.1: Historia płatności użytkownika
+        - Output: lista transakcji z datami i kwotami
+        
+  F5.2: Podsumowanie rezerwacji
+        - Output: liczba potwierdzeń, odrzuceń, oczekujących
+
+
+2.2. WYMAGANIA NIEFUNKCJONALNE
+
+  NF1: BEZPIECZEŃSTWO
+       - Hasła przechowywane w postaci hashu (bcrypt)
+       - Ochrona przed SQL injection (SQLAlchemy ORM)
+       - Ochrona sesji (Flask-Login)
+       - Walidacja na stronie serwera (Backend)
+       - CSRF protection (w Flask)
+
+  NF2: WYDAJNOŚĆ
+       - Czas załadowania strony: < 2 sekundy
+       - Odpowiedź na akcję użytkownika: < 1 sekunda
+       - Obsługa 50+ równoczesnych użytkowników
+       - Indeksy bazodanowe na polach wyszukiwanego
+
+  NF3: DOSTĘPNOŚĆ
+       - Aplikacja dostępna 24/7
+       - Uptime: min. 99%
+       - Recovery Time Objective (RTO): < 1 godzina
+
+  NF4: SKALOWOŚĆ
+       - Architektura pozwalająca na rozszerzenie
+       - Możliwość dodania nowych typów karnetów
+       - Możliwość dodania nowych modułów
+
+  NF5: UŻYTECZNOŚĆ
+       - Interfejs intuicyjny i łatwy w obsłudze
+       - Responsywny design (mobile, tablet, desktop)
+       - Komunikaty błędów zrozumiałe dla użytkownika
+       - Język polski
+
+  NF6: NIEZAWODNOŚĆ
+       - Transakcje bazodanowe atomowe
+       - Walidacja poprawności danych
+       - Obsługa błędów
+       - Backup bazy danych
+
+  NF7: KONSERWACJA
+       - Kod dobrze udokumentowany
+       - Struktury proste i jasne
+       - Testy automatyczne (pytest, behave)
+       - Logi błędów
+
+
+2.3. DIAGRAM PRZYPADKÓW UŻYCIA (USE CASE DIAGRAM)
+
+┌────────────────────────────────────────────────────────────────────┐
+│                      BOULDER GYM SYSTEM                            │
+└────────────────────────────────────────────────────────────────────┘
+
+                      ┌───────────────┐
+                      │   KLIENT      │
+                      └────────┬──────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        │                      │                      │
+   ┌────▼─────┐          ┌─────▼────┐        ┌──────▼────┐
+   │Register  │          │  Login   │        │Buy Pass   │
+   └──────────┘          └──────────┘        └───────────┘
+        │                      │                    │
+        │                      │                    │
+   ┌────▼──────────┐      ┌────▼──────────┐  ┌─────▼─────────┐
+   │View Slots     │      │View My Reserv.│  │10-entry Pass  │
+   │              │      │               │  │30-day Pass    │
+   │-List Slots   │      │-Pending       │  │               │
+   │-Filter Date  │      │-Confirmed     │  └─────────────┘
+   │              │      │-Declined      │
+   └────┬─────────┘      └───────────────┘
+        │
+   ┌────▼──────────┐
+   │Book Slot      │
+   │              │
+   │-Select Slot  │
+   │-Confirm Book │
+   │-Create Reserv│
+   └───────────────┘
+                      
+
+                    ┌──────────────────┐
+                    │  RECEPCJONISTA   │
+                    └────────┬─────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+   ┌────▼──────┐       ┌─────▼─────┐      ┌──────▼────┐
+   │Login      │       │Dashboard  │      │Manage     │
+   │           │       │Reception  │      │Shoes      │
+   └───────────┘       │           │      │           │
+                       │-View Reserv.     │-Add Shoes │
+                       │-Pending First    │-View Shoes│
+                       └────┬──────┘      │-Rent Shoes│
+                            │             │-Return    │
+                       ┌────┴──────┐      │Shoes      │
+                       │            │      └───────────┘
+                    ┌──▼──┐    ┌───▼──┐
+                    │Conf.│    │Decl. │
+                    │Entry│    │Entry │
+                    └─────┘    └──────┘
+
+
+2.4. SCENARIUSZE UŻYCIA
+
+SCENARIUSZ 1: Nowy klient chce się zarejestrować i zarezerwować slot
+┌──────────────────────────────────────────────────────────────────┐
+│ NAZWA: "Rejestracja i pierwsza rezerwacja"                      │
+│ AKTOR: Nowy klient                                              │
+│ WARUNKI POCZĄTKOWE: Użytkownik nie ma konta                     │
+│ WARUNKI KOŃCOWE: Rezerwacja tworzy się, czeka na potwierdzenie │
+│                                                                  │
+│ SCENARIUSZ GŁÓWNY:                                              │
+│ 1. Klient otwiera aplikację                                     │
+│ 2. Klika "Register"                                             │
+│ 3. Wypełnia: username, email, hasło                             │
+│ 4. Wybiera rolę "Client"                                        │
+│ 5. Klika "Register" - konto utworzone                           │
+│ 6. Przechodzi do /login                                         │
+│ 7. Wpisuje username i hasło                                     │
+│ 8. Jest na /client/dashboard                                    │
+│ 9. Klika "Buy Pass"                                             │
+│ 10. Wybiera "10-entry pass" - 100 PLN                           │
+│ 11. Potwierdzenie - karnet w systemie                           │
+│ 12. Klika "View Slots"                                          │
+│ 13. Wybiera slot: "28 stycznia 2026, 10:00-11:30"             │
+│ 14. Klika "Book" - rezerwacja tworzy się (pending)             │
+│ 15. Pojawia się na liście "My Reservations"                    │
+│                                                                  │
+│ SCENARIUSZ ALTERNATYWNY (Błąd):                                │
+│ - Jeśli username już istnieje → "Username already exists"      │
+│ - Jeśli slot zapełniony → "Slot is full"                       │
+│ - Jeśli nie ma karnetu → "You need a valid pass"               │
+└──────────────────────────────────────────────────────────────────┘
+
+SCENARIUSZ 2: Recepcjonista potwierdza wejście klienta
+┌──────────────────────────────────────────────────────────────────┐
+│ NAZWA: "Potwierdzenie wejścia na halę"                          │
+│ AKTOR: Recepcjonista                                            │
+│ WARUNKI POCZĄTKOWE: Klient ma rezerwację "pending",             │
+│                     ma aktywny karnet z wejściami              │
+│ WARUNKI KOŃCOWE: Rezerwacja = "confirmed", wejścia -= 1        │
+│                                                                  │
+│ SCENARIUSZ GŁÓWNY:                                              │
+│ 1. Recepcjonista loguje się                                     │
+│ 2. Przechodzi do /receptionist/dashboard                        │
+│ 3. Widzi listę rezerwacji (PendingFirst)                       │
+│ 4. Klient przychodzi i podaje swoją nazwę                       │
+│ 5. Recepcjonista znajduje rezerwację w liście                   │
+│ 6. Klika przycisk "Confirm"                                     │
+│ 7. System odejmuje 1 wejście z karnetu (10→9)                   │
+│ 8. Status zmienia się na "Confirmed"                            │
+│ 9. Pole "Confirmed By" zawiera ID recepcjonisty                │
+│ 10. Komunikat: "Entry confirmed successfully!"                  │
+│ 11. Klient wchodzi na halę                                      │
+│                                                                  │
+│ SCENARIUSZ ALTERNATYWNY:                                        │
+│ - Jeśli brak karetu → "Client has no valid pass"               │
+│ - Jeśli recepcjonista klika "Decline":                          │
+│   • Status → "Declined"                                         │
+│   • Wejścia NIE są odjęte                                       │
+│   • Klient może zarezerwować inny slot                          │
+└──────────────────────────────────────────────────────────────────┘
+
+SCENARIUSZ 3: Recepcjonista wypożycza buty wspinaczkowe
+┌──────────────────────────────────────────────────────────────────┐
+│ NAZWA: "Wypożyczenie butów klientowi"                           │
+│ AKTOR: Recepcjonista, Klient                                    │
+│ WARUNKI POCZĄTKOWE: Buty dostępne (rozmiar 42)                 │
+│                     Klient zalogowany                           │
+│ WARUNKI KOŃCOWE: Buty przypisane do klienta, status=rented      │
+│                                                                  │
+│ SCENARIUSZ GŁÓWNY:                                              │
+│ 1. Recepcjonista przechodzi do "Manage Shoes"                   │
+│ 2. Widzi listę butów (dostępne na górze)                        │
+│ 3. Klient prosi o buty rozmiar 42                               │
+│ 4. Recepcjonista wpisuje username: "testuser123"               │
+│ 5. Klika "Rent" przy butach rozmiar 42                          │
+│ 6. Status: "available" → "rented"                               │
+│ 7. Pole "Rented To": "testuser123"                              │
+│ 8. Komunikat: "Shoes rented successfully"                       │
+│ 9. Klient otrzymuje buty                                        │
+│                                                                  │
+│ SCENARIUSZ: Zwrot butów                                         │
+│ 1. Klient zwraca buty recepcjoniście                            │
+│ 2. Recepcjonista sprawdza stan                                  │
+│ 3. Klika "Return" przy butach                                   │
+│ 4. Status: "rented" → "available"                               │
+│ 5. Pole "Rented To": zostaje wyczyszczone                       │
+│ 6. Buty znowu dostępne do wynajęcia                             │
+└──────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+3. GRUPY UŻYTKOWNIKÓW APLIKACJI
+================================================================================
+
+3.1. OPIS UŻYTKOWNIKÓW
+
+GRUPA 1: KLIENCI (Climbers)
+┌─────────────────────────────────────────────────────────────────┐
+│ Kim są:                                                         │
+│ - Osoby chcące wspinać się na sztucznej ścianie wspinaczkowej  │
+│ - Pracownicy hali, członkowie klubu, goście                    │
+│ - Osoby od 10 do 70 lat (różne poziomy zaawansowania)          │
+│ - Zarówno amatorzy jak i zawodowcy                             │
+│                                                                 │
+│ Liczba: ~100-500 klientów rocznie (szacunek)                   │
+│                                                                 │
+│ Charakterystyka:                                               │
+│ - Różnorodny wiek i poziom zaawansowania                       │
+│ - Zmienność w harmonogramie (pracujący, studenci, emeryci)     │
+│ - Preferencje czasowe (poranne, wieczorowe, weekendowe)        │
+│ - Różne potrzeby (rekreacja, trening, lekcje)                  │
+└─────────────────────────────────────────────────────────────────┘
+
+GRUPA 2: RECEPCJONIŚCI / PRACOWNICY HALI
+┌─────────────────────────────────────────────────────────────────┐
+│ Kim są:                                                         │
+│ - Pracownicy hali wspinaczkowej / personel recepcji            │
+│ - Osoby odpowiadające za kontrolę wejść                        │
+│ - Instrktorzy i asystenci                                      │
+│ - Kierownik hali                                               │
+│                                                                 │
+│ Liczba: ~3-5 osób na zmianę                                    │
+│                                                                 │
+│ Charakterystyka:                                               │
+│ - Pracownicy stali i sezonowi                                  │
+│ - Wysoki poziom zaawansowania w wspinaczce                     │
+│ - Odpowiadają za bezpieczeństwo                                │
+│ - Obsługują system rezerwacji                                  │
+│ - Zarządzają wyposażeniem (buty, sprzęt)                       │
+└─────────────────────────────────────────────────────────────────┘
+
+GRUPA 3: ADMINISTRATOR SYSTEMU (OPCJONALNIE)
+┌─────────────────────────────────────────────────────────────────┐
+│ Kim są:                                                         │
+│ - Osoba odpowiadająca za utrzymanie systemu                    │
+│ - Może być kierownikiem hali lub zewnętrznym administratorem   │
+│                                                                 │
+│ Liczba: ~1 osoba                                               │
+│                                                                 │
+│ Dodatkowe uprawnienia:                                         │
+│ - Zarządzanie użytkownikami (reset hasła)                      │
+│ - Tworzenie nowych slotów czasowych                            │
+│ - Raporty i statystyki                                         │
+│ - Backup bazy danych                                           │
+└─────────────────────────────────────────────────────────────────┘
+
+
+3.2. DOSTĘP DO KOMPONENTÓW SYSTEMU
+
+KOMPONENTY DOSTĘPNE DLA KLIENTÓW:
+┌──────────────────────────────────────────┐
+│ STRONY:                                  │
+│ ✓ /                          (Strona gł. │
+│ ✓ /register                  (Rejestracja│
+│ ✓ /login                     (Logowanie  │
+│ ✓ /client/dashboard          (Dashboard) │
+│ ✓ /client/buy-pass           (Zakup pass)│
+│ ✓ /client/view-slots         (Sloty)     │
+│ ✓ /logout                    (Wylogowanie│
+│ ✗ /receptionist/*            (BRAK)      │
+│                                           │
+│ OPERACJE:                                │
+│ ✓ Przejrzenie profilu                    │
+│ ✓ Zakup karnetu (10-entry, 30-day)       │
+│ ✓ Rezerwacja slotu                       │
+│ ✓ Przeglądanie własnych rezerwacji       │
+│ ✓ Zmiana hasła (OPCJONALNIE)            │
+│ ✗ Wyświetlanie rezerwacji innych klientów│
+│ ✗ Dostęp do panelu recepcji              │
+└──────────────────────────────────────────┘
+
+KOMPONENTY DOSTĘPNE DLA RECEPCJONISTÓW:
+┌──────────────────────────────────────────┐
+│ STRONY:                                  │
+│ ✓ /                          (Strona gł. │
+│ ✓ /login                     (Logowanie  │
+│ ✓ /receptionist/dashboard    (Dashboard) │
+│ ✓ /receptionist/manage-shoes (Buty)      │
+│ ✓ /logout                    (Wylogowanie│
+│ ✗ /client/*                  (BRAK)      │
+│                                           │
+│ OPERACJE:                                │
+│ ✓ Wyświetlanie wszystkich rezerwacji     │
+│ ✓ Wyszukiwanie po username               │
+│ ✓ Sortowanie (Pending first)             │
+│ ✓ Potwierdzenie rezerwacji (Confirm)     │
+│ ✓ Odrzucenie rezerwacji (Decline)        │
+│ ✓ Zarządzanie butami                     │
+│ ✓ Dodawanie butów                        │
+│ ✓ Wynajmowanie butów                     │
+│ ✓ Zwracanie butów                        │
+│ ✗ Edycja danych klientów                 │
+│ ✗ Usuwanie użytkowników                  │
+└──────────────────────────────────────────┘
+
+
+3.3. DOSTĘP DO PRZECHOWYWANYCH DANYCH
+
+DANE KLIENTA - CO WIDZI SAMI O SOBIE:
+┌──────────────────────────────────────────┐
+│ ✓ Swoje username i email                 │
+│ ✓ Aktywny karnet (typ, wejścia, data)   │
+│ ✓ Historię karnetów                      │
+│ ✓ Własne rezerwacje (wszystkie statusy)  │
+│ ✓ Datę rejestracji                       │
+│ ✓ Historię płatności (OPCJONALNIE)      │
+│ ✗ Hasło (nie widać, wpisz nowe)         │
+│ ✗ Dane innych klientów                   │
+│ ✗ Dochody hali                           │
+└──────────────────────────────────────────┘
+
+DANE DOSTĘPNE DLA RECEPCJONISTY:
+┌──────────────────────────────────────────┐
+│ ✓ Imiona wszystkich klientów (username)  │
+│ ✓ Rezerwacje (data, status, klient)     │
+│ ✓ Potwierdzone wejścia                   │
+│ ✓ ID recepcjonisty który potwierdził     │
+│ ✓ Historia butów (rozmiar, status)       │
+│ ✓ Aktywne karenty klientów              │
+│ ✗ Hasła klientów                         │
+│ ✗ Email klientów (OPCJONALNIE)          │
+│ ✗ Historia płatności (tylko admin)       │
+└──────────────────────────────────────────┘
+
+DANE DOSTĘPNE TYLKO DLA ADMINISTRATORA:
+┌──────────────────────────────────────────┐
+│ ✓ WSZYSTKIE dane użytkowników            │
+│ ✓ Historia transakcji i płatności        │
+│ ✓ Raporty przychodu                      │
+│ ✓ Logi dostępu do systemu                │
+│ ✓ Konfiguracja systemu                   │
+│ ✓ Uprawnienia użytkowników               │
+│ ✓ Backup i restore bazy danych           │
+└──────────────────────────────────────────┘
+
+
+3.4. SCENARIUSZE DOSTĘPU
+
+KLIENT A - OKAZJONALNY UCZESTNIK:
+  - Loguje się 1-2 razy w miesiącu
+  - Kupuje karnet 10-entry
+  - Rezerwuje losowe sloty
+  - Wypożycza buty przy każdej wizycie
+  - Patrzy na własne rezerwacje
+  
+KLIENT B - REGULARNY UCZESTNIK:
+  - Loguje się 2-3 razy w tygodniu
+  - Kupuje karnet 30-day na stały
+  - Rezerwuje zawsze o tej samej godzinie
+  - Ma swoje buty, nie wypożycza
+  - Sprawdza harmonogram
+  
+RECEPCJONISTA - PRACOWNIK ZMIANOWY:
+  - Loguje się na początek zmiany
+  - Sprawdza rezerwacje na dzisiaj
+  - Potwierdza wejścia klientów
+  - Zarządza butami (rent/return)
+  - Wyszukuje rezerwacje konkretnych klientów
+  - Sortuje po statusie (pending first)
+  
+RECEPCJONISTA - KIEROWNIK:
+  - Wszystko jak wyżej +
+  - Dodaje nowe buty do systemu
+  - Sprawdza stan butów
+  - Tworzy nowe sloty czasowe
+  - Generuje raporty (OPCJONALNIE)
+
+
+================================================================================
+4. OCZEKIWANE KORZYŚCI Z IMPLEMENTACJI APLIKACJI
+================================================================================
+
+4.1. KORZYŚCI DLA HALI WSPINACZKOWEJ
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. AUTOMATYZACJA PROCESÓW BIZNESOWYCH                          │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    WCZEŚNIEJ (bez systemu):                                    │
+│    • Rezerwacje na papierze lub w zeszycie                     │
+│    • Ręczne liczenie wejść klientów                            │
+│    • Czasochłonny proces potwierdzeń                           │
+│    • Brak kontroli nad wstęcznikami                            │
+│    • Trudne wyszukiwanie rezerwacji                            │
+│                                                                 │
+│    TERAZ (z systemem):                                         │
+│    • Rezerwacje online, automatyczne                           │
+│    • System liczy wejścia automatycznie                        │
+│    • Jedno kliknięcie do potwierdzenia                         │
+│    • Pełna kontrola dostępu                                    │
+│    • Wyszukiwanie w 1 sekundę                                  │
+│    • Szacunkowa oszczędność czasu: 5-10 h/tydzień             │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. ZWIĘKSZENIE PRZYCHODU I RENTOWNOŚCI                        │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Wyższa sprzedaż karnetów (24/7 dostęp)                   │
+│    • Lepsze zarządzanie pojemnością hali                       │
+│    • Kontrola „ghost reservations" (rezerwacje, które klient  │
+│      zapomnina anulować)                                       │
+│    • Unikanie „oververbookingu" (zbyt wiele rezerwacji)        │
+│    • Precyzyjne dane o liczbie wejść                           │
+│    • Szacunkowy wzrost przychodu: 10-15% (300-500 zł/miesiąc)│
+│    • Zmniejszenie strat (kontrola dostępu)                     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. POPRAWA DOŚWIADCZENIA KLIENTA                              │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Rejestracja i logowanie online (wygodnie z domu)         │
+│    • Łatwa rezerwacja slotów (bez telefonów)                   │
+│    • Wiadomość potwierdzająca rezerwację                       │
+│    • Przeglądanie dostępnych slotów 24/7                       │
+│    • Możliwość zarządzania karnetem                            │
+│    • Brak kolejek przy recepcji                                │
+│    • Poczucie zorganizowania i kontroli                        │
+│    • Wynik: wyższe zadowolenie, więcej powrotów               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. LEPSZE ZARZĄDZANIE ZASOBAMI                               │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    Zarządzanie butami:                                         │
+│    • Precyzyjny inwentarz (ile butów dostępnych)              │
+│    • Śledzenie wypożyczeń (kto ma które buty)                 │
+│    • Historia stanu (stan butów po czase)                      │
+│    • Automatyczne przypomnienia o zwrotach                     │
+│                                                                 │
+│    Zarządzanie czasem:                                         │
+│    • Widać które sloty są popularne                            │
+│    • Może otworzyć dodatkowe sloty w godzinach szczytu        │
+│    • Planowanie harmonogramu pracowników                       │
+│    • Optymalizacja pojemności                                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. ANALITYKA I RAPORTY (PRZYSZŁOŚĆ)                          │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    Możliwość generowania:                                      │
+│    • Raport przychodu (ile zarobiono w danym miesiącu)        │
+│    • Raport popularności slotów (które godziny najlepsze)     │
+│    • Raport aktywności klientów (kto przychodzi najczęściej)  │
+│    • Raport wskaźnika zwrotów (rezygnacji)                    │
+│    • Analiza trendów (rosnąca/spadająca popularność)          │
+│    • Prognozowanie przychodu                                   │
+│    → Pomaga w podejmowaniu decyzji biznesowych                │
+└─────────────────────────────────────────────────────────────────┘
+
+
+4.2. KORZYŚCI DLA KLIENTÓW
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. WYGODA I ELASTYCZNOŚĆ                                       │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Rejestracja i rezerwacja z domu (bez wychodzenia)        │
+│    • Dostęp 24/7 (o każdej porze dnia i nocy)                │
+│    • Nie trzeba dzwonić do hali i czekać na odpowiedź         │
+│    • Brak kolejek przy recepcji                                │
+│    • Może zarezerwować slot na kolejny miesiąc                │
+│    • Elastyczne zmienianie rezerwacji (OPCJONALNIE)           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 2. TRANSPARENTNOŚĆ I KONTROLA                                  │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Widzi ile wejść ma w karnecie                             │
+│    • Zna datę wygaśnięcia karnetu                              │
+│    • Może sprawdzić status rezerwacji (pending/confirmed)      │
+│    • Historia wszystkich rezerwacji                            │
+│    • Wiadomo ile czasu do następnego wejścia                   │
+│    • Pełna transparentność cen                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 3. OSZCZĘDNOŚCI                                                │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Nie ma „zapominanych" rezerwacji (reminder system)       │
+│    • Optymalizacja wydatków na karnet                          │
+│    • Szybko widać czy karnet się opłaca                        │
+│    • Nie płaci za nieużywane wejścia (przejrzystość)          │
+│    • Może porównać 10-entry vs 30-day i wybrać tansze         │
+│    • Szacunek oszczędności: 20-30% wydatków na karnet         │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 4. PLANOWANIE I ORGANIZACJA                                    │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Może planować wizyty z wyprzedzeniem                      │
+│    • Widzi całą mapę dostępnych slotów                         │
+│    • Może wybierać optymalny czas (nie szczyty)               │
+│    • Organizuje wspinaczę z przyjaciółmi (razem rezerwują)    │
+│    • Brak niespodzianek „slot zajęty" w ostatniej chwili     │
+└─────────────────────────────────────────────────────────────────┘
+
+
+4.3. PRZYCHODY FINANSOWE (ESTYMACJA)
+
+SCENARIUSZ: Hala z 100 klientami aktywnych/miesiąc
+
+PRZYCHODY PRZED SYSTEMEM:
+  • Średnia: 80 karnetów/miesiąc × 125 PLN = 10,000 PLN
+  • Strata z powodu „ghost reservations": ~10% = -1,000 PLN
+  • Netto: 9,000 PLN/miesiąc
+
+PRZYCHODY PO WDROŻENIU SYSTEMU:
+  • Zwiększona sprzedaż: +15% = +1,500 PLN
+  • Zmniejszona strata: +1,000 PLN (kontrola dostępu)
+  • Dodatkowe usługi (wynajom butów): +500 PLN
+  • Netto: 12,000 PLN/miesiąc
+  • WZROST: +3,000 PLN/miesiąc = +36,000 PLN/rok
+
+KOSZT IMPLEMENTACJI:
+  • Programista (60-80 godzin): ~5,000-8,000 PLN (jednorazowo)
+  • Hosting (cloud): ~100-200 PLN/miesiąc
+  • Konserwacja: ~200 PLN/miesiąc
+  
+ZWROT INWESTYCJI (ROI):
+  • Koszty roczne: 8,000 + (100×12) + (200×12) = 12,400 PLN
+  • Przychód dodatni: 36,000 PLN
+  • Zysk netto: 36,000 - 12,400 = 23,600 PLN
+  • ROI: (23,600 / 12,400) × 100% = 190% w ciągu roku
+  • Okres zwrotu: ~4 miesiące
+
+
+4.4. INNE KORZYŚCI
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 5. KONKURENCYJNOŚĆ I WIZERUNEK                                │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Hala wygląda profesjonalnie i nowoczesnie                 │
+│    • Możliwość konkurowania z większymi obiektami              │
+│    • Przyciąga młodszych klientów (cyfrowych)                 │
+│    • Lepszy wizerunek w mediach społecznych                    │
+│    • Pozytywne opinie klientów („świetny system")             │
+│    • Wyróżnia się na tle konkurencji lokalnej                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 6. SKALOWOŚĆ BIZNESU                                           │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • System pozwala łatwo obsługiwać więcej klientów          │
+│    • Łatwa ekspansja na drugą halę (ten sam system)           │
+│    • Możliwość integracji z innymi usługami                    │
+│    • Potencjał do rozszerzenia (trenery, grupy, eventy)       │
+│    • Baza danych dla marketingu (znamy profil klienta)        │
+│    • Droga do franchizy lub sprzedaży systemu                  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 7. DANE I MARKETING                                            │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Znamy preferencje klientów (które sloty popularne)        │
+│    • Możemy wysłać promocji na sloty mało popularne            │
+│    • Wiemy który klient czy stały                              │
+│    • Możemy oferować loyalty program                           │
+│    • Segmentacja klientów (rekreacyjni vs zawodowi)           │
+│    • Personalizowana komunikacja                               │
+│    • Email marketing z bazą klientów                           │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│ 8. ZMNIEJSZENIE BŁĘDÓW I KONFLIKTÓW                           │
+│    ───────────────────────────────────────────────────────     │
+│                                                                 │
+│    • Brak pomyłek w liczeniu wejść (wszystko elektronicznie)  │
+│    • Brak sporów o rezerwacje (wszystko zapisane)             │
+│    • Brak „straconego" karnetu (przechowywane online)         │
+│    • Mniej nieporozumień z klientami                           │
+│    • Automatyczne potwierdzenia zmniejszają konflikty          │
+│    • Lepsza komunikacja = mniej reklamacji                     │
+│    • Szacunek: zmniejszenie problemów o 80%                    │
+└─────────────────────────────────────────────────────────────────┘
+
+
+4.5. STRATEGICZNE KORZYŚCI
+
+┌─────────────────────────────────────────────────────────────────┐
+│ TRANSFORMACJA CYFROWA                                          │
+│ ───────────────────────────────────────────────────────────   │
+│                                                                 │
+│ • Przejście z analogu na cyfrową obsługę                      │
+│ • Przygotowanie na przyszłość (post-covid trend)              │
+│ • Możliwość integracji z mobilną aplikacją                    │
+│ • Przygotowanie do skalowania biznesu                          │
+│ • Konkurowanie z większymi łańcuchami kin/fitness             │
+│ • Otwiera drzwi dla nowych kanałów sprzedaży                  │
+└─────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+PODSUMOWANIE
+================================================================================
+
+Boulder Gym Management System to aplikacja webowa mająca na celu automatyzację
+procesów w małej hali wspinaczkowej. System obejmuje zarządzanie rezerwacjami,
+karnetami wstępu, wyposażeniem (buty) i potwierdzaniem wejść przez
+recepcjonistów.
+
+Główne grupy użytkowników to klienci (mogą rezerwować) i recepcjoniści
+(potwierdzają wejścia). System oferuje wyraźne rozdzielenie ról i dostępu
+do danych.
+
+Oczekiwane korzyści obejmują:
+  • Automatyzację procesów (oszczędność czasu)
+  • Zwiększenie przychodu (15% wzrost)
+  • Poprawę doświadczenia klienta
+  • Lepsze zarządzanie zasobami
+  • Zwrot inwestycji w ~4 miesiące
+
+Aplikacja jest gotowa do wdrożenia i stanowi solidną bazę dla
+dalszego rozwoju systemu.
+
+================================================================================
+KONIEC DOKUMENTU
+================================================================================

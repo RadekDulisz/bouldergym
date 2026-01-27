@@ -1,8 +1,9 @@
 from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import os
+from sqlalchemy import func
 from models import db, User, Pass, Reservation, Shoes, Payment
 from config import Config
 
@@ -141,6 +142,16 @@ def book_entry():
         return redirect(url_for('view_slots'))
     
     reservation_date = datetime.strptime(date_str, '%Y-%m-%d')
+
+    duplicate = Reservation.query.filter(
+        Reservation.user_id == current_user.id,
+        Reservation.reservation_date == reservation_date,
+        Reservation.time_slot == time_slot,
+        Reservation.status.in_(['pending', 'confirmed'])
+    ).first()
+    if duplicate:
+        flash('You already have a reservation for this slot.', 'warning')
+        return redirect(url_for('view_slots'))
     
     existing = Reservation.query.filter_by(
         reservation_date=reservation_date,
@@ -175,10 +186,10 @@ def buy_pass():
         pass_type = request.form.get('pass_type')
         
         pass_options = {
-            '10-entry': {'entries': 10, 'price': 100.0, 'expiry_days': None},
-            '20-entry': {'entries': 20, 'price': 180.0, 'expiry_days': None},
-            '30-day': {'entries': None, 'price': 150.0, 'expiry_days': 30},
-            '90-day': {'entries': None, 'price': 400.0, 'expiry_days': 90},
+            '10-entry': {'entries': 10, 'price': 100.0, 'expiry_days': None, 'category': 'entry'},
+            '20-entry': {'entries': 20, 'price': 180.0, 'expiry_days': None, 'category': 'entry'},
+            '30-day': {'entries': None, 'price': 150.0, 'expiry_days': 30, 'category': 'time'},
+            '90-day': {'entries': None, 'price': 400.0, 'expiry_days': 90, 'category': 'time'},
         }
         
         if pass_type not in pass_options:
@@ -186,6 +197,12 @@ def buy_pass():
             return redirect(url_for('buy_pass'))
         
         option = pass_options[pass_type]
+        
+        active_pass = Pass.query.filter_by(user_id=current_user.id, is_active=True).first()
+        
+        if active_pass:
+            flash('You already have an active pass. Please use or cancel it first.', 'danger')
+            return redirect(url_for('buy_pass'))
         
         new_pass = Pass(
             user_id=current_user.id,
@@ -212,7 +229,10 @@ def buy_pass():
         flash(f'Successfully purchased {pass_type} pass!', 'success')
         return redirect(url_for('client_dashboard'))
     
-    return render_template('buy_pass.html')
+    active_passes = Pass.query.filter_by(user_id=current_user.id, is_active=True).all()
+    has_active_pass = len(active_passes) > 0
+    
+    return render_template('buy_pass.html', active_passes=active_passes, has_active_pass=has_active_pass)
 
 @app.route('/receptionist/dashboard')
 @login_required
@@ -222,40 +242,93 @@ def receptionist_dashboard():
     today_reservations = Reservation.query.filter(
         db.func.date(Reservation.reservation_date) == today
     ).all()
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 30
+    sort_by = request.args.get('sort', 'pending_first')
+    
+    query = Reservation.query
+    
+    if sort_by == 'date_asc':
+        query = query.order_by(Reservation.reservation_date.asc())
+    elif sort_by == 'date_desc':
+        query = query.order_by(Reservation.reservation_date.desc())
+    elif sort_by == 'status':
+        query = query.order_by(Reservation.status.asc(), Reservation.reservation_date.desc())
+    elif sort_by == 'pending_first':
+        query = query.order_by(
+            db.case((Reservation.status == 'pending', 0), else_=1),
+            Reservation.reservation_date.desc()
+        )
+    else:
+        query = query.order_by(
+            db.case((Reservation.status == 'pending', 0), else_=1),
+            Reservation.reservation_date.desc()
+        )
+    
+    reservations_page = query.paginate(page=page, per_page=per_page, error_out=False)
     
     total_shoes = Shoes.query.count()
     rented_shoes = Shoes.query.filter_by(is_available=False).count()
     
-    return render_template('receptionist_dashboard.html', 
-                         reservations=today_reservations,
-                         total_shoes=total_shoes,
-                         rented_shoes=rented_shoes)
+    return render_template(
+        'receptionist_dashboard.html',
+        today_reservations=today_reservations,
+        reservations=reservations_page.items,
+        pagination=reservations_page,
+        total_shoes=total_shoes,
+        rented_shoes=rented_shoes,
+        sort_by=sort_by,
+    )
 
 @app.route('/receptionist/search-bookings', methods=['GET', 'POST'])
 @login_required
 @receptionist_required
 def search_bookings():
     reservations = []
+    search_term = ''
+    date_str = ''
+    sort_by = request.args.get('sort', 'pending_first')
     
     if request.method == 'POST':
-        search_term = request.form.get('search_term')
-        date_str = request.form.get('date')
-        
-        query = Reservation.query.join(User)
-        
-        if search_term:
-            query = query.filter(
-                (User.username.contains(search_term)) | 
-                (User.email.contains(search_term))
-            )
-        
-        if date_str:
-            search_date = datetime.strptime(date_str, '%Y-%m-%d')
-            query = query.filter(db.func.date(Reservation.reservation_date) == search_date.date())
-        
-        reservations = query.all()
+        search_term = request.form.get('search_term', '')
+        date_str = request.form.get('date', '')
+    elif request.method == 'GET':
+        search_term = request.args.get('search_term', '')
+        date_str = request.args.get('date', '')
     
-    return render_template('search_bookings.html', reservations=reservations)
+    query = Reservation.query.join(User, Reservation.user_id == User.id)
+    
+    if search_term:
+        query = query.filter(
+            (User.username.contains(search_term)) | 
+            (User.email.contains(search_term))
+        )
+    
+    if date_str:
+        search_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        query = query.filter(func.date(Reservation.reservation_date) == search_date)
+    
+    if sort_by == 'date_asc':
+        query = query.order_by(Reservation.reservation_date.asc())
+    elif sort_by == 'date_desc':
+        query = query.order_by(Reservation.reservation_date.desc())
+    elif sort_by == 'status':
+        query = query.order_by(Reservation.status.asc(), Reservation.reservation_date.desc())
+    elif sort_by == 'pending_first':
+        query = query.order_by(
+            db.case((Reservation.status == 'pending', 0), else_=1),
+            Reservation.reservation_date.desc()
+        )
+    else:
+        query = query.order_by(
+            db.case((Reservation.status == 'pending', 0), else_=1),
+            Reservation.reservation_date.desc()
+        )
+    
+    reservations = query.all()
+    
+    return render_template('search_bookings.html', reservations=reservations, search_term=search_term, date=date_str, sort_by=sort_by)
 
 @app.route('/receptionist/confirm-entry/<int:reservation_id>', methods=['POST'])
 @login_required
@@ -278,6 +351,42 @@ def confirm_entry(reservation_id):
     db.session.commit()
     
     flash('Entry confirmed successfully!', 'success')
+    
+    next_url = (request.form.get('next') or request.args.get('next') or '').rstrip('?')
+    if next_url and next_url.startswith('/'):
+        next_url = next_url.split('#')[0]
+        return redirect(next_url)
+
+    search_term = request.args.get('search_term', '')
+    date_str = request.args.get('date', '')
+    if search_term or date_str:
+        return redirect(url_for('search_bookings', search_term=search_term, date=date_str))
+    
+    return redirect(url_for('search_bookings'))
+
+
+@app.route('/receptionist/decline-entry/<int:reservation_id>', methods=['POST'])
+@login_required
+@receptionist_required
+def decline_entry(reservation_id):
+    reservation = Reservation.query.get_or_404(reservation_id)
+
+    reservation.status = 'cancelled'
+    reservation.confirmed_by = current_user.id
+    db.session.commit()
+
+    flash('Reservation declined.', 'info')
+
+    next_url = (request.form.get('next') or request.args.get('next') or '').rstrip('?')
+    if next_url and next_url.startswith('/'):
+        next_url = next_url.split('#')[0]
+        return redirect(next_url)
+
+    search_term = request.args.get('search_term', '')
+    date_str = request.args.get('date', '')
+    if search_term or date_str:
+        return redirect(url_for('search_bookings', search_term=search_term, date=date_str))
+
     return redirect(url_for('search_bookings'))
 
 @app.route('/receptionist/check-pass/<int:user_id>')

@@ -12,11 +12,11 @@
     <form method="POST" class="grid md:grid-cols-3 gap-4 items-end">
         <div>
             <label for="search_term" class="block text-sm font-medium text-slate-300 mb-2">Search by Username or Email</label>
-            <input type="text" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-orange-500 transition" id="search_term" name="search_term" placeholder="Enter username or email">
+            <input type="text" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-orange-500 transition" id="search_term" name="search_term" placeholder="Enter username or email" value="{{ search_term }}">
         </div>
         <div>
             <label for="date" class="block text-sm font-medium text-slate-300 mb-2">Date</label>
-            <input type="date" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-orange-500 transition" id="date" name="date">
+            <input type="date" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-orange-500 transition" id="date" name="date" value="{{ date }}">
         </div>
         <button type="submit" class="px-6 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg font-semibold transition">Search</button>
     </form>
@@ -25,8 +25,17 @@
 
 {% if reservations is defined %}
 <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
-    <div class="bg-slate-700 px-6 py-4 border-b border-slate-600">
+    <div class="bg-slate-700 px-6 py-4 border-b border-slate-600 flex items-center justify-between">
         <h3 class="text-lg font-bold text-orange-400">Search Results ({{ reservations|length }} found)</h3>
+        <div class="flex items-center gap-2">
+            <label for="sort" class="text-sm text-slate-300">Sort:</label>
+            <select id="sort" onchange="sortResults(this.value)" class="px-3 py-1 bg-slate-600 border border-slate-500 rounded-lg text-slate-100 text-sm focus:outline-none focus:border-orange-500">
+                <option value="pending_first" {% if sort_by == 'pending_first' %}selected{% endif %}>Pending First</option>
+                <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>Date (Newest)</option>
+                <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Date (Oldest)</option>
+                <option value="status" {% if sort_by == 'status' %}selected{% endif %}>Status (A-Z)</option>
+            </select>
+        </div>
     </div>
     <div class="p-6">
         {% if reservations %}
@@ -45,7 +54,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-700">
                         {% for reservation in reservations %}
-                        <tr>
+                        <tr id="res-{{ reservation.id }}">
                             <td class="py-3">#{{ reservation.id }}</td>
                             <td class="py-3">{{ reservation.reservation_date.strftime('%Y-%m-%d') }}</td>
                             <td class="py-3">{{ reservation.time_slot }}</td>
@@ -62,8 +71,13 @@
                             </td>
                             <td class="py-3 space-x-2">
                                 {% if reservation.status == 'pending' %}
-                                    <form method="POST" action="{{ url_for('confirm_entry', reservation_id=reservation.id) }}" class="inline">
+                                    <form method="POST" action="{{ url_for('confirm_entry', reservation_id=reservation.id, search_term=search_term, date=date) }}" class="inline">
+                                        <input type="hidden" name="next" value="{{ request.full_path }}#res-{{ reservation.id }}">
                                         <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-semibold transition">Confirm</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('decline_entry', reservation_id=reservation.id, search_term=search_term, date=date) }}" class="inline">
+                                        <input type="hidden" name="next" value="{{ request.full_path }}#res-{{ reservation.id }}">
+                                        <button type="submit" class="px-3 py-1 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-semibold transition">Decline</button>
                                     </form>
                                 {% endif %}
                                 <a href="{{ url_for('check_pass', user_id=reservation.user.id) }}" class="inline-block px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold transition">Check Pass</a>
@@ -79,5 +93,13 @@
     </div>
 </div>
 {% endif %}
+
+<script>
+function sortResults(sortValue) {
+    const url = new URL(window.location);
+    url.searchParams.set('sort', sortValue);
+    window.location.href = url.toString();
+}
+</script>
 {% endblock %}
 

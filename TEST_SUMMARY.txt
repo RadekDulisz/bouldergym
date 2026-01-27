@@ -1,0 +1,76 @@
+Unit Testing Summary - Boulder Gym Application
+
+Omówienie Testów Jednostkowych (Unit Testing Overview)
+
+Narzędzia i Framework (Tools and Framework)
+- Framework testowy: pytest 7.4.3
+- Dodatki: pytest-flask 1.3.0
+- Baza danych testowa: SQLite in-memory (izolowane testy)
+- Język: Python 3.12
+
+Struktura Testów (Test Structure)
+
+1. test_models.py - Testy Modeli Danych (20 testów)
+- TestUserModel (3): test_user_creation; test_password_hashing; test_user_representation
+- TestPassModel (7): test_entry_pass_creation; test_time_pass_creation; test_pass_is_valid_active; test_pass_is_valid_expired; test_pass_is_valid_no_entries; test_deduct_entry; test_deduct_entry_multiple
+- TestReservationModel (2): test_reservation_creation; test_reservation_representation
+- TestShoesModel (3): test_shoes_creation; test_shoes_rental; test_shoes_representation
+- TestPaymentModel (2): test_payment_creation; test_payment_representation
+- TestRelationships (3): test_user_pass_relationship; test_user_reservation_relationship; test_shoes_renter_relationship
+
+2. test_routes.py - Testy Endpointów i Logiki Biznesowej (28 testów)
+- TestIndexRoute (1): test_index_page
+- TestRegistrationRoute (4): test_get_register_page; test_register_new_user; test_register_duplicate_username; test_register_duplicate_email
+- TestLoginRoute (5): test_get_login_page; test_login_valid_client; test_login_valid_receptionist; test_login_invalid_password; test_login_nonexistent_user
+- TestLogoutRoute (1): test_logout
+- TestClientDashboard (2): test_client_dashboard_requires_login; test_client_dashboard_access
+- TestReceptionistDashboard (3): test_receptionist_dashboard_requires_login; test_receptionist_dashboard_requires_role; test_receptionist_dashboard_access
+- TestBuyPass (4): test_buy_pass_page_access; test_buy_entry_pass; test_buy_time_pass; test_prevent_multiple_active_passes
+- TestBooking (4): test_view_slots_page; test_book_entry_without_pass; test_book_entry_with_pass; test_prevent_duplicate_booking (FAILED)
+- TestConfirmEntry (1): test_confirm_entry
+- TestShoesManagement (3): test_add_shoes; test_rent_shoes; test_return_shoes
+
+Wyniki Testów (Test Results)
+- Total Tests: 48
+- Passed: 47
+- Failed: 1
+- Success Rate: 97.9%
+- Execution Time: 10.94s
+
+Szczegółowe Wyniki
+- Testy Modeli: 20/20 passed (100%), czas 3.77s
+- Testy Tras: 27/28 passed (96.4%), 1 failed (test_prevent_duplicate_booking), czas 7.62s
+
+Analiza Niepowodzenia (Failure Analysis)
+- Test: test_prevent_duplicate_booking
+- Oczekiwane: blokada duplikatów rezerwacji
+- Rzeczywiste: rezerwacja została utworzona
+- Przyczyna: logika walidacji wymaga dopracowania
+- Priorytet: Średni
+
+Przykładowe Metody Testowe (Sample Test Methods)
+1) Hashowanie hasła (User): weryfikuje, że hash różni się od hasła i walidacja działa
+2) Odejmowanie wejścia (Pass): zmniejsza entries_remaining i dezaktywuje karnet przy 0
+3) Rejestracja użytkownika (Route): sprawdza sukces rejestracji i komunikat
+4) Zakup karnetu (Route): tworzy karnet 10-entry z 10 wejściami
+5) Potwierdzenie wejścia (Route): zmienia status rezerwacji na confirmed i odejmuje 1 wejście
+
+Pokrycie Testami (Test Coverage)
+- Modele: User, Pass, Reservation, Shoes, Payment (pełne przypadki, 100%)
+- Endpointy: rejestracja/logowanie, dashboardy, zakup karnetów, rezerwacje (1 brakujący przypadek), obuwie, potwierdzanie wejść
+
+Zalecenia (Recommendations)
+1. Naprawić walidację duplikatów rezerwacji (unikalność user_id + date + time_slot)
+2. Dodać edge cases (np. brak dostępnych butów, limit 20 osób)
+3. Dodać testy wydajnościowe dla wielu równoległych rezerwacji
+4. Dodać testy integracyjne pełnych przepływów (rejestracja → zakup → rezerwacja → wejście)
+
+Jak Uruchomić Testy (How to Run Tests)
+- Instalacja: pip install -r requirements-test.txt
+- Wszystkie testy: pytest -v
+- Tylko modele: pytest test_models.py -v
+- Tylko trasy: pytest test_routes.py -v
+- Z pokryciem: pytest --cov=. --cov-report=html
+
+Wnioski (Conclusions)
+Aplikacja Boulder Gym ma solidne pokrycie testami jednostkowymi (97.9% sukcesu). Testy weryfikują: poprawność modeli i relacji, bezpieczeństwo haseł, logikę karnetów/rezerwacji/płatności, kontrolę dostępu i zarządzanie obuwiem. System testowy używa fixtures i in-memory DB dla szybkich, izolowanych testów.
