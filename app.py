@@ -9,7 +9,6 @@ from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Initialize extensions
 db.init_app(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -19,7 +18,6 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Role-based access control decorator
 def receptionist_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -29,7 +27,6 @@ def receptionist_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -72,7 +69,6 @@ def login():
             login_user(user)
             flash(f'Welcome back, {user.username}!', 'success')
             
-            # Redirect based on role
             if user.role == 'receptionist':
                 return redirect(url_for('receptionist_dashboard'))
             else:
@@ -89,17 +85,14 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
 
-# Client Routes
 @app.route('/client/dashboard')
 @login_required
 def client_dashboard():
     if current_user.role != 'client':
         return redirect(url_for('receptionist_dashboard'))
     
-    # Get user's passes
     passes = Pass.query.filter_by(user_id=current_user.id).all()
     
-    # Get user's reservations
     reservations = Reservation.query.filter_by(user_id=current_user.id).order_by(Reservation.reservation_date.desc()).all()
     
     return render_template('client_dashboard.html', passes=passes, reservations=reservations)
@@ -111,14 +104,12 @@ def view_slots():
         flash('Access denied.', 'danger')
         return redirect(url_for('index'))
     
-    # Generate available slots for next 7 days
     slots = []
     time_slots = ['09:00-11:00', '11:00-13:00', '13:00-15:00', '15:00-17:00', '17:00-19:00', '19:00-21:00']
     
-    for i in range(7):
+    for i in range(30):
         date = datetime.now().date() + timedelta(days=i)
         for time_slot in time_slots:
-            # Check availability (max 20 people per slot)
             existing = Reservation.query.filter_by(
                 reservation_date=datetime.combine(date, datetime.min.time()),
                 time_slot=time_slot,
@@ -144,16 +135,13 @@ def book_entry():
     date_str = request.form.get('date')
     time_slot = request.form.get('time_slot')
     
-    # Check if user has a valid pass
     valid_pass = Pass.query.filter_by(user_id=current_user.id, is_active=True).first()
     if not valid_pass or not valid_pass.is_valid():
         flash('You need a valid pass to book an entry.', 'danger')
         return redirect(url_for('view_slots'))
     
-    # Parse date
     reservation_date = datetime.strptime(date_str, '%Y-%m-%d')
     
-    # Check availability
     existing = Reservation.query.filter_by(
         reservation_date=reservation_date,
         time_slot=time_slot,
@@ -164,7 +152,6 @@ def book_entry():
         flash('This slot is fully booked.', 'danger')
         return redirect(url_for('view_slots'))
     
-    # Create reservation
     reservation = Reservation(
         user_id=current_user.id,
         reservation_date=reservation_date,
@@ -187,7 +174,6 @@ def buy_pass():
     if request.method == 'POST':
         pass_type = request.form.get('pass_type')
         
-        # Define pass types and prices
         pass_options = {
             '10-entry': {'entries': 10, 'price': 100.0, 'expiry_days': None},
             '20-entry': {'entries': 20, 'price': 180.0, 'expiry_days': None},
@@ -201,7 +187,6 @@ def buy_pass():
         
         option = pass_options[pass_type]
         
-        # Create pass
         new_pass = Pass(
             user_id=current_user.id,
             pass_type=pass_type,
@@ -211,9 +196,8 @@ def buy_pass():
             price=option['price']
         )
         db.session.add(new_pass)
-        db.session.flush()  # Flush to get the pass ID before creating payment
+        db.session.flush()
         
-        # Create payment record
         payment = Payment(
             user_id=current_user.id,
             amount=option['price'],
@@ -230,18 +214,15 @@ def buy_pass():
     
     return render_template('buy_pass.html')
 
-# Receptionist Routes
 @app.route('/receptionist/dashboard')
 @login_required
 @receptionist_required
 def receptionist_dashboard():
-    # Get today's reservations
     today = datetime.now().date()
     today_reservations = Reservation.query.filter(
         db.func.date(Reservation.reservation_date) == today
     ).all()
     
-    # Get rental statistics
     total_shoes = Shoes.query.count()
     rented_shoes = Shoes.query.filter_by(is_available=False).count()
     
@@ -282,18 +263,15 @@ def search_bookings():
 def confirm_entry(reservation_id):
     reservation = Reservation.query.get_or_404(reservation_id)
     
-    # Check if user has a valid pass and deduct entry
     valid_pass = Pass.query.filter_by(user_id=reservation.user_id, is_active=True).first()
     
     if not valid_pass or not valid_pass.is_valid():
         flash('User does not have a valid pass.', 'danger')
         return redirect(url_for('search_bookings'))
     
-    # Deduct entry if it's an entry-based pass
     if valid_pass.entries_remaining is not None:
         valid_pass.deduct_entry()
     
-    # Update reservation status
     reservation.status = 'confirmed'
     reservation.confirmed_by = current_user.id
     
@@ -324,7 +302,6 @@ def sell_pass():
             flash('User not found.', 'danger')
             return redirect(url_for('sell_pass'))
         
-        # Define pass types and prices
         pass_options = {
             '10-entry': {'entries': 10, 'price': 100.0, 'expiry_days': None},
             '20-entry': {'entries': 20, 'price': 180.0, 'expiry_days': None},
@@ -338,7 +315,6 @@ def sell_pass():
         
         option = pass_options[pass_type]
         
-        # Create pass
         new_pass = Pass(
             user_id=user.id,
             pass_type=pass_type,
@@ -348,9 +324,8 @@ def sell_pass():
             price=option['price']
         )
         db.session.add(new_pass)
-        db.session.flush()  # Flush to get the pass ID before creating payment
+        db.session.flush()
         
-        # Create payment record
         payment = Payment(
             user_id=user.id,
             amount=option['price'],
@@ -397,7 +372,6 @@ def manage_shoes():
                 shoe.current_renter_id = user.id
                 shoe.rental_date = datetime.utcnow()
                 
-                # Create payment record
                 payment = Payment(
                     user_id=user.id,
                     amount=5.0,
@@ -426,12 +400,10 @@ def manage_shoes():
     shoes = Shoes.query.all()
     return render_template('manage_shoes.html', shoes=shoes)
 
-# Initialize database
 def init_db():
     with app.app_context():
         db.create_all()
         
-        # Create a default receptionist account if it doesn't exist
         if not User.query.filter_by(username='receptionist').first():
             receptionist = User(
                 username='receptionist',
@@ -443,7 +415,6 @@ def init_db():
             db.session.commit()
             print('Created default receptionist account (username: receptionist, password: admin123)')
         
-        # Add some sample shoes if none exist
         if Shoes.query.count() == 0:
             for size in [7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0]:
                 shoe = Shoes(size=size)
@@ -453,6 +424,6 @@ def init_db():
 
 if __name__ == '__main__':
     init_db()
-    # Debug mode should be disabled in production
     debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
     app.run(debug=debug_mode, host='0.0.0.0', port=5000)
+

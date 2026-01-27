@@ -3,89 +3,85 @@
 {% block title %}Receptionist Dashboard - Boulder Gym{% endblock %}
 
 {% block content %}
-<h2>Receptionist Dashboard</h2>
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-orange-400">Receptionist Dashboard</h2>
+</div>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Today's Reservations</h5>
-                <p class="display-4">{{ reservations|length }}</p>
-                <a href="{{ url_for('search_bookings') }}" class="btn btn-primary">View All</a>
-            </div>
-        </div>
+
+<div class="grid md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 text-center hover:border-orange-500 transition">
+        <div class="text-4xl font-bold text-orange-400 mb-2">{{ reservations|length }}</div>
+        <p class="text-slate-400">Today's Reservations</p>
+        <a href="{{ url_for('search_bookings') }}" class="mt-4 inline-block px-4 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg font-semibold transition">View All</a>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Shoes Rented</h5>
-                <p class="display-4">{{ rented_shoes }} / {{ total_shoes }}</p>
-                <a href="{{ url_for('manage_shoes') }}" class="btn btn-primary">Manage</a>
-            </div>
-        </div>
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 text-center hover:border-orange-500 transition">
+        <div class="text-4xl font-bold text-blue-400 mb-2">{{ rented_shoes }} / {{ total_shoes }}</div>
+        <p class="text-slate-400">Shoes Rented</p>
+        <a href="{{ url_for('manage_shoes') }}" class="mt-4 inline-block px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition">Manage</a>
     </div>
-    <div class="col-md-4">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title">Quick Actions</h5>
-                <div class="d-grid gap-2">
-                    <a href="{{ url_for('search_bookings') }}" class="btn btn-outline-primary">Search Bookings</a>
-                    <a href="{{ url_for('sell_pass') }}" class="btn btn-outline-success">Sell Pass</a>
-                </div>
-            </div>
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6 hover:border-orange-500 transition">
+        <h3 class="text-lg font-bold text-orange-400 mb-4">Quick Actions</h3>
+        <div class="space-y-2">
+            <a href="{{ url_for('search_bookings') }}" class="block px-4 py-2 border border-orange-500 text-orange-400 hover:bg-orange-500/10 rounded-lg text-center font-semibold transition">Search Bookings</a>
+            <a href="{{ url_for('sell_pass') }}" class="block px-4 py-2 border border-green-500 text-green-400 hover:bg-green-500/10 rounded-lg text-center font-semibold transition">Sell Pass</a>
         </div>
     </div>
 </div>
 
-<div class="mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h5>Today's Reservations</h5>
-        </div>
-        <div class="card-body">
-            {% if reservations %}
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Time</th>
-                                <th>User</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for reservation in reservations %}
-                            <tr>
-                                <td>{{ reservation.time_slot }}</td>
-                                <td>{{ reservation.user.username }} ({{ reservation.user.email }})</td>
-                                <td>
-                                    {% if reservation.status == 'confirmed' %}
-                                        <span class="badge bg-success">Confirmed</span>
-                                    {% elif reservation.status == 'pending' %}
-                                        <span class="badge bg-warning">Pending</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">{{ reservation.status }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if reservation.status == 'pending' %}
-                                        <form method="POST" action="{{ url_for('confirm_entry', reservation_id=reservation.id) }}" style="display: inline;">
-                                            <button type="submit" class="btn btn-sm btn-success">Confirm Entry</button>
-                                        </form>
-                                    {% else %}
-                                        <span class="text-muted">Already confirmed</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <p>No reservations for today.</p>
-            {% endif %}
-        </div>
+
+<div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+    <div class="bg-slate-700 px-6 py-4 border-b border-slate-600">
+        <h3 class="text-xl font-bold text-orange-400">Today's Reservations</h3>
+    </div>
+    <div class="p-6">
+        {% if reservations %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-slate-600">
+                        <tr>
+                            <th class="text-left py-3">Time</th>
+                            <th class="text-left py-3">User</th>
+                            <th class="text-left py-3">Status</th>
+                            <th class="text-left py-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        {% for reservation in reservations %}
+                        <tr>
+                            <td class="py-3">{{ reservation.time_slot }}</td>
+                            <td class="py-3">
+                                <div>{{ reservation.user.username }}</div>
+                                <div class="text-xs text-slate-400">{{ reservation.user.email }}</div>
+                            </td>
+                            <td class="py-3">
+                                {% if reservation.status == 'confirmed' %}
+                                    <span class="px-3 py-1 bg-green-900/30 text-green-400 rounded-full text-xs font-semibold">Confirmed</span>
+                                {% elif reservation.status == 'pending' %}
+                                    <span class="px-3 py-1 bg-yellow-900/30 text-yellow-400 rounded-full text-xs font-semibold">Pending</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-slate-700 text-slate-300 rounded-full text-xs font-semibold">{{ reservation.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                {% if reservation.status == 'pending' %}
+                                    <form method="POST" action="{{ url_for('confirm_entry', reservation_id=reservation.id) }}" class="inline">
+                                        <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold transition">Confirm Entry</button>
+                                    </form>
+                                {% else %}
+                                    <span class="text-slate-500 text-sm">Confirmed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-slate-400">No reservations for today.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
+

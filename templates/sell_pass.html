@@ -3,60 +3,64 @@
 {% block title %}Sell Pass - Boulder Gym{% endblock %}
 
 {% block content %}
-<h2>Sell Pass</h2>
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-orange-400">Sell Pass</h2>
+</div>
 
-<div class="row justify-content-center mt-4">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Enter customer information</h5>
-                <form method="POST">
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Customer Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                        <small class="form-text text-muted">Enter the customer's username</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="pass_type" class="form-label">Pass Type</label>
-                        <select class="form-select" id="pass_type" name="pass_type" required>
-                            <option value="">Select pass type...</option>
-                            <option value="10-entry">10-Entry Pass - $100.00</option>
-                            <option value="20-entry">20-Entry Pass - $180.00</option>
-                            <option value="30-day">30-Day Pass - $150.00</option>
-                            <option value="90-day">90-Day Pass - $400.00</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Sell Pass</button>
-                    <a href="{{ url_for('receptionist_dashboard') }}" class="btn btn-secondary">Cancel</a>
-                </form>
+<div class="grid md:grid-cols-2 gap-8">
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-6">
+        <h3 class="text-xl font-bold text-orange-400 mb-6">Enter Customer Information</h3>
+        <form method="POST" class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate-300 mb-2">Customer Username</label>
+                <input type="text" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-orange-500 transition" id="username" name="username" required>
+                <small class="text-slate-400 block mt-1">Enter the customer's username</small>
             </div>
+
+            <div>
+                <label for="pass_type" class="block text-sm font-medium text-slate-300 mb-2">Pass Type</label>
+                <select class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-orange-500 transition" id="pass_type" name="pass_type" required>
+                    <option value="">Select pass type...</option>
+                    <option value="10-entry">10-Entry Pass - $100.00</option>
+                    <option value="20-entry">20-Entry Pass - $180.00</option>
+                    <option value="30-day">30-Day Pass - $150.00</option>
+                    <option value="90-day">90-Day Pass - $400.00</option>
+                </select>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="submit" class="px-6 py-2 bg-orange-600 hover:bg-orange-500 rounded-lg font-semibold transition">Sell Pass</button>
+                <a href="{{ url_for('receptionist_dashboard') }}" class="px-6 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="bg-slate-700 px-6 py-4 border-b border-slate-600">
+            <h3 class="text-lg font-bold text-orange-400">Pass Information</h3>
         </div>
-
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5>Pass Information</h5>
+        <div class="p-6 space-y-6">
+            
+            <div>
+                <h4 class="font-bold text-orange-400 mb-3">Entry-Based Passes</h4>
+                <ul class="space-y-2 text-slate-300 text-sm">
+                    <li class="flex justify-between"><span><strong>10-Entry Pass:</strong> 10 climbing sessions</span><span class="text-orange-400 font-semibold">$100.00</span></li>
+                    <li class="flex justify-between"><span><strong>20-Entry Pass:</strong> 20 climbing sessions</span><span class="text-orange-400 font-semibold">$180.00</span></li>
+                </ul>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Entry-Based Passes</h6>
-                        <ul>
-                            <li><strong>10-Entry Pass:</strong> $100.00 - 10 climbing sessions</li>
-                            <li><strong>20-Entry Pass:</strong> $180.00 - 20 climbing sessions</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Time-Based Passes</h6>
-                        <ul>
-                            <li><strong>30-Day Pass:</strong> $150.00 - Unlimited for 30 days</li>
-                            <li><strong>90-Day Pass:</strong> $400.00 - Unlimited for 90 days</li>
-                        </ul>
-                    </div>
-                </div>
+            
+            
+            <div>
+                <h4 class="font-bold text-green-400 mb-3">Time-Based Passes</h4>
+                <ul class="space-y-2 text-slate-300 text-sm">
+                    <li class="flex justify-between"><span><strong>30-Day Pass:</strong> Unlimited for 30 days</span><span class="text-green-400 font-semibold">$150.00</span></li>
+                    <li class="flex justify-between"><span><strong>90-Day Pass:</strong> Unlimited for 90 days</span><span class="text-green-400 font-semibold">$400.00</span></li>
+                </ul>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+

@@ -3,131 +3,134 @@
 {% block title %}Manage Shoes - Boulder Gym{% endblock %}
 
 {% block content %}
-<h2>Manage Shoes</h2>
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-orange-400">Manage Shoes</h2>
+</div>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5>Add New Shoes</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <input type="hidden" name="action" value="add">
-                    <div class="mb-3">
-                        <label for="size" class="form-label">Shoe Size</label>
-                        <input type="number" step="0.5" class="form-control" id="size" name="size" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Add Shoes</button>
-                </form>
-            </div>
+<div class="grid md:grid-cols-3 gap-6 mb-8">
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4">
+            <h3 class="text-lg font-bold text-white">Add New Shoes</h3>
         </div>
-
-        <div class="card mt-3">
-            <div class="card-header bg-success text-white">
-                <h5>Rent Shoes</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <input type="hidden" name="action" value="rent">
-                    <div class="mb-3">
-                        <label for="shoe_id_rent" class="form-label">Shoe ID</label>
-                        <input type="number" class="form-control" id="shoe_id_rent" name="shoe_id" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="username_rent" class="form-label">Customer Username</label>
-                        <input type="text" class="form-control" id="username_rent" name="username" required>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">Rent Shoes ($5.00)</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card mt-3">
-            <div class="card-header bg-warning">
-                <h5>Return Shoes</h5>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <input type="hidden" name="action" value="return">
-                    <div class="mb-3">
-                        <label for="shoe_id_return" class="form-label">Shoe ID</label>
-                        <input type="number" class="form-control" id="shoe_id_return" name="shoe_id" required>
-                    </div>
-                    <button type="submit" class="btn btn-warning w-100">Return Shoes</button>
-                </form>
-            </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="add">
+                <div>
+                    <label for="size" class="block text-sm font-medium text-slate-300 mb-2">Shoe Size</label>
+                    <input type="number" step="0.5" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-blue-500 transition" id="size" name="size" required>
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition">Add Shoes</button>
+            </form>
         </div>
     </div>
 
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5>Shoes Inventory</h5>
-            </div>
-            <div class="card-body">
-                {% if shoes %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Size</th>
-                                    <th>Condition</th>
-                                    <th>Status</th>
-                                    <th>Rented By</th>
-                                    <th>Rental Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for shoe in shoes %}
-                                <tr>
-                                    <td>{{ shoe.id }}</td>
-                                    <td>{{ shoe.size }}</td>
-                                    <td>
-                                        {% if shoe.condition == 'good' %}
-                                            <span class="badge bg-success">Good</span>
-                                        {% elif shoe.condition == 'fair' %}
-                                            <span class="badge bg-warning">Fair</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Poor</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if shoe.is_available %}
-                                            <span class="badge bg-success">Available</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Rented</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if shoe.current_renter_id %}
-                                            {{ shoe.current_renter_id }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if shoe.rental_date %}
-                                            {{ shoe.rental_date.strftime('%Y-%m-%d %H:%M') }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p>No shoes in inventory.</p>
-                {% endif %}
-            </div>
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-green-600 to-green-500 px-6 py-4">
+            <h3 class="text-lg font-bold text-white">Rent Shoes</h3>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="rent">
+                <div>
+                    <label for="shoe_id_rent" class="block text-sm font-medium text-slate-300 mb-2">Shoe ID</label>
+                    <input type="number" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-green-500 transition" id="shoe_id_rent" name="shoe_id" required>
+                </div>
+                <div>
+                    <label for="username_rent" class="block text-sm font-medium text-slate-300 mb-2">Customer Username</label>
+                    <input type="text" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-green-500 transition" id="username_rent" name="username" required>
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition">Rent Shoes ($5.00)</button>
+            </form>
+        </div>
+    </div>
+
+    
+    <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-4">
+            <h3 class="text-lg font-bold text-white">Return Shoes</h3>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="return">
+                <div>
+                    <label for="shoe_id_return" class="block text-sm font-medium text-slate-300 mb-2">Shoe ID</label>
+                    <input type="number" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:border-amber-500 transition" id="shoe_id_return" name="shoe_id" required>
+                </div>
+                <button type="submit" class="w-full px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg font-semibold transition">Return Shoes</button>
+            </form>
         </div>
     </div>
 </div>
 
-<div class="mt-3">
-    <a href="{{ url_for('receptionist_dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+
+<div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+    <div class="bg-slate-700 px-6 py-4 border-b border-slate-600">
+        <h3 class="text-lg font-bold text-orange-400">Shoes Inventory</h3>
+    </div>
+    <div class="p-6">
+        {% if shoes %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-slate-600">
+                        <tr>
+                            <th class="text-left py-3">ID</th>
+                            <th class="text-left py-3">Size</th>
+                            <th class="text-left py-3">Condition</th>
+                            <th class="text-left py-3">Status</th>
+                            <th class="text-left py-3">Rented By</th>
+                            <th class="text-left py-3">Rental Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        {% for shoe in shoes %}
+                        <tr>
+                            <td class="py-3">#{{ shoe.id }}</td>
+                            <td class="py-3">{{ shoe.size }}</td>
+                            <td class="py-3">
+                                {% if shoe.condition == 'good' %}
+                                    <span class="px-3 py-1 bg-green-900/30 text-green-400 rounded-full text-xs font-semibold">Good</span>
+                                {% elif shoe.condition == 'fair' %}
+                                    <span class="px-3 py-1 bg-yellow-900/30 text-yellow-400 rounded-full text-xs font-semibold">Fair</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-red-900/30 text-red-400 rounded-full text-xs font-semibold">Poor</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                {% if shoe.is_available %}
+                                    <span class="px-3 py-1 bg-green-900/30 text-green-400 rounded-full text-xs font-semibold">Available</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-red-900/30 text-red-400 rounded-full text-xs font-semibold">Rented</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                {% if shoe.current_renter_id %}
+                                    {{ shoe.current_renter_id }}
+                                {% else %}
+                                    <span class="text-slate-500">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                {% if shoe.rental_date %}
+                                    {{ shoe.rental_date.strftime('%Y-%m-%d %H:%M') }}
+                                {% else %}
+                                    <span class="text-slate-500">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-slate-400">No shoes in inventory.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-8">
+    <a href="{{ url_for('receptionist_dashboard') }}" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold transition">Back to Dashboard</a>
 </div>
 {% endblock %}
+

@@ -3,46 +3,70 @@
 {% block title %}Home - Boulder Gym{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-8 text-center">
-        <h1 class="display-4">🧗 Welcome to Boulder Gym</h1>
-        <p class="lead mt-4">Your premier climbing gym reservation system</p>
-        
-        {% if not current_user.is_authenticated %}
-        <div class="mt-5">
-            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-3">Register</a>
-            <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg">Login</a>
-        </div>
-        {% endif %}
+<div class="text-center py-12 md:py-20">
+    <h1 class="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+        🧗 Welcome to Boulder Gym
+    </h1>
+    <p class="text-xl md:text-2xl text-slate-300 mb-8">Your premier climbing gym reservation system</p>
+    
+    {% if not current_user.is_authenticated %}
+    <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+        <a href="{{ url_for('register') }}" class="px-8 py-3 bg-orange-600 hover:bg-orange-500 rounded-lg font-semibold transition transform hover:scale-105">
+            Register Now
+        </a>
+        <a href="{{ url_for('login') }}" class="px-8 py-3 border border-orange-500 text-orange-400 hover:bg-orange-500/10 rounded-lg font-semibold transition">
+            Login
+        </a>
+    </div>
+    {% endif %}
+</div>
 
-        <div class="row mt-5">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">For Climbers</h5>
-                        <ul class="list-unstyled text-start">
-                            <li>✓ Book climbing sessions</li>
-                            <li>✓ Purchase passes</li>
-                            <li>✓ View your bookings</li>
-                            <li>✓ Manage your account</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">For Staff</h5>
-                        <ul class="list-unstyled text-start">
-                            <li>✓ Manage bookings</li>
-                            <li>✓ Confirm entries</li>
-                            <li>✓ Sell passes</li>
-                            <li>✓ Handle shoe rentals</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="grid md:grid-cols-2 gap-8 mt-12">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-8 hover:border-orange-500 transition">
+        <div class="text-4xl mb-4">🏔️</div>
+        <h2 class="text-2xl font-bold mb-6 text-orange-400">For Climbers</h2>
+        <ul class="space-y-3 text-slate-300">
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Book climbing sessions</span>
+            </li>
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Purchase passes</span>
+            </li>
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>View your bookings</span>
+            </li>
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Manage your account</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="bg-slate-800 border border-slate-700 rounded-xl p-8 hover:border-orange-500 transition">
+        <div class="text-4xl mb-4">👔</div>
+        <h2 class="text-2xl font-bold mb-6 text-orange-400">For Staff</h2>
+        <ul class="space-y-3 text-slate-300">
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Manage bookings</span>
+            </li>
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Confirm entries</span>
+            </li>
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Sell passes</span>
+            </li>
+            <li class="flex items-center">
+                <span class="text-orange-400 mr-3">✓</span>
+                <span>Handle shoe rentals</span>
+            </li>
+        </ul>
     </div>
 </div>
 {% endblock %}
+

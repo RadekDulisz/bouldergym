@@ -4,97 +4,104 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Boulder Gym{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            @apply min-h-screen flex flex-col bg-slate-950 text-slate-100;
         }
         .content {
-            flex: 1;
-        }
-        .navbar-brand {
-            font-weight: bold;
+            @apply flex-1;
         }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">🧗 Boulder Gym</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+<body class="bg-slate-950 text-slate-100">
+    <nav class="bg-slate-900 border-b border-slate-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="{{ url_for('index') }}" class="flex items-center space-x-2 font-bold text-xl hover:text-orange-400 transition">
+                    <span>🧗</span>
+                    <span>Boulder Gym</span>
+                </a>
+                
+                <div class="hidden md:flex items-center space-x-8">
                     {% if current_user.is_authenticated %}
                         {% if current_user.role == 'client' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('client_dashboard') }}">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('view_slots') }}">View Slots</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('buy_pass') }}">Buy Pass</a>
-                            </li>
+                            <a href="{{ url_for('client_dashboard') }}" class="hover:text-orange-400 transition">Dashboard</a>
+                            <a href="{{ url_for('view_slots') }}" class="hover:text-orange-400 transition">View Slots</a>
+                            <a href="{{ url_for('buy_pass') }}" class="hover:text-orange-400 transition">Buy Pass</a>
                         {% elif current_user.role == 'receptionist' %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('receptionist_dashboard') }}">Dashboard</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('search_bookings') }}">Bookings</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('sell_pass') }}">Sell Pass</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('manage_shoes') }}">Shoes</a>
-                            </li>
+                            <a href="{{ url_for('receptionist_dashboard') }}" class="hover:text-orange-400 transition">Dashboard</a>
+                            <a href="{{ url_for('search_bookings') }}" class="hover:text-orange-400 transition">Bookings</a>
+                            <a href="{{ url_for('sell_pass') }}" class="hover:text-orange-400 transition">Sell Pass</a>
+                            <a href="{{ url_for('manage_shoes') }}" class="hover:text-orange-400 transition">Shoes</a>
                         {% endif %}
-                        <li class="nav-item">
-                            <span class="nav-link">Hello, {{ current_user.username }}</span>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
-                        </li>
+                        <span class="text-slate-400">{{ current_user.username }}</span>
+                        <a href="{{ url_for('logout') }}" class="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition">Logout</a>
                     {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('register') }}">Register</a>
-                        </li>
+                        <a href="{{ url_for('login') }}" class="hover:text-orange-400 transition">Login</a>
+                        <a href="{{ url_for('register') }}" class="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-500 transition">Register</a>
                     {% endif %}
-                </ul>
+                </div>
+
+                <button id="menu-btn" class="md:hidden p-2 rounded-lg hover:bg-slate-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-slate-800 border-t border-slate-700">
+            <div class="px-4 py-4 space-y-3">
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'client' %}
+                        <a href="{{ url_for('client_dashboard') }}" class="block hover:text-orange-400">Dashboard</a>
+                        <a href="{{ url_for('view_slots') }}" class="block hover:text-orange-400">View Slots</a>
+                        <a href="{{ url_for('buy_pass') }}" class="block hover:text-orange-400">Buy Pass</a>
+                    {% elif current_user.role == 'receptionist' %}
+                        <a href="{{ url_for('receptionist_dashboard') }}" class="block hover:text-orange-400">Dashboard</a>
+                        <a href="{{ url_for('search_bookings') }}" class="block hover:text-orange-400">Bookings</a>
+                        <a href="{{ url_for('sell_pass') }}" class="block hover:text-orange-400">Sell Pass</a>
+                        <a href="{{ url_for('manage_shoes') }}" class="block hover:text-orange-400">Shoes</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="block hover:text-orange-400">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="block hover:text-orange-400">Login</a>
+                    <a href="{{ url_for('register') }}" class="block hover:text-orange-400">Register</a>
+                {% endif %}
             </div>
         </div>
     </nav>
 
-    <div class="content">
-        <div class="container mt-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-lg mb-4 {% if category == 'danger' %}bg-red-900/30 border border-red-700{% elif category == 'success' %}bg-green-900/30 border border-green-700{% else %}bg-blue-900/30 border border-blue-700{% endif %}">
+                        <p class="{% if category == 'danger' %}text-red-200{% elif category == 'success' %}text-green-200{% else %}text-blue-200{% endif %}">{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
 
+    <div class="content">
+        <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
             {% block content %}{% endblock %}
         </div>
     </div>
 
-    <footer class="bg-light text-center py-3 mt-5">
-        <div class="container">
-            <p class="mb-0">&copy; 2026 Boulder Gym Reservation System</p>
+    <footer class="bg-slate-900 border-t border-slate-700 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <p class="text-center text-slate-400">&copy; 2026 Boulder Gym Reservation System. All rights reserved.</p>
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+    </script>
 </body>
 </html>
+
