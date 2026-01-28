@@ -21,14 +21,12 @@ def step_user_exists(context, username):
 @given('użytkownik klienta istnieje z danymi')
 @given('że użytkownik klienta istnieje z danymi')
 def step_client_user_exists_with_data(context):
-    # Robust table parsing: grab second cell of each row (value) regardless of heading text
     username = None
     password = None
     if context.table and len(context.table.rows) >= 2:
         username = context.table.rows[0].cells[-1].strip()
         password = context.table.rows[1].cells[-1].strip()
     else:
-        # Fallback: iterate rows defensively
         for row in context.table:
             cells = row.cells
             if len(cells) >= 2 and cells[0].strip().lower() == 'username':
@@ -36,7 +34,6 @@ def step_client_user_exists_with_data(context):
             if len(cells) >= 2 and cells[0].strip().lower() == 'password':
                 password = cells[1].strip()
     
-    # Fallback defaults if table parsing fails
     if not username:
         username = 'testclient'
     if not password:
@@ -55,7 +52,6 @@ def step_client_user_exists_with_data(context):
 @given('użytkownik recepcjonisty istnieje z danymi')
 @given('że użytkownik recepcjonisty istnieje z danymi')
 def step_receptionist_user_exists_with_data(context):
-    # Robust parsing identical to client variant
     username = None
     password = None
     if context.table and len(context.table.rows) >= 2:
@@ -105,7 +101,6 @@ def step_logged_in_as_client(context, username):
 @given('jestem zalogowany jako recepcjonista')
 @given('że jestem zalogowany jako recepcjonista')
 def step_logged_in_as_receptionist(context):
-    # Ensure receptionist account exists before login
     with app.app_context():
         user = User.query.filter_by(username='receptionist').first()
         if not user:

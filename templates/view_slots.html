@@ -79,12 +79,10 @@
 </div>
 
 <script>
-    // Slot data from backend
     const allSlots = {{ slots | tojson }};
     
     let weekOffset = 0;
 
-    // Format a date as YYYY-MM-DD in local time (avoid UTC shift)
     function formatDateLocal(d) {
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -92,7 +90,6 @@
         return `${y}-${m}-${day}`;
     }
     
-    // Always get today's date dynamically
     function getToday() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -132,14 +129,11 @@
         const weekStart = getWeekStart(weekOffset);
         const weekEnd = getWeekEnd(weekOffset);
         
-        // Create grid for 7 days
         const grid = document.createElement('div');
         grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3';
         
-        // Initialize day slots map
         const daySlots = {};
         
-        // Filter slots for this week and organize by date
         allSlots.forEach(slot => {
             const slotDate = new Date(slot.date);
             slotDate.setHours(0, 0, 0, 0);
@@ -153,7 +147,6 @@
             }
         });
         
-        // Create day cards for each day of the week
         for (let i = 0; i < 7; i++) {
             const dayDate = new Date(weekStart);
             dayDate.setDate(weekStart.getDate() + i);
@@ -162,7 +155,6 @@
             const dayCard = document.createElement('div');
             dayCard.className = 'bg-slate-800 border border-slate-700 rounded-lg overflow-hidden hover:border-orange-500 transition';
             
-            // Day header
             const header = document.createElement('div');
             header.className = 'bg-slate-700 px-4 py-3 border-b border-slate-600 text-center';
             header.innerHTML = `
@@ -172,7 +164,6 @@
             `;
             dayCard.appendChild(header);
             
-            // Slots container
             const slotsDiv = document.createElement('div');
             slotsDiv.className = 'p-3 space-y-2';
             
@@ -223,7 +214,6 @@
         updateWeekDisplay();
     }
     
-    // Initialize
     updateWeekDisplay();
 </script>
 {% endblock %}

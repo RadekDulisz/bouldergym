@@ -16,7 +16,6 @@ def step_select_pass_type(context, pass_type):
 @when('klikam przycisk zakupu')
 def step_click_purchase_button(context):
     pass_type = getattr(context, 'selected_pass', '10-entry')
-    # Locate the form by its hidden pass_type input, then click the button inside
     form = context.driver.find_element(By.XPATH, f"//form[input[@name='pass_type' and @value='{pass_type}']]")
     button = form.find_element(By.TAG_NAME, 'button')
     button.click()

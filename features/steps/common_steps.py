@@ -55,7 +55,6 @@ def step_see_message(context, message):
         if target in context.driver.page_source.lower():
             return
         time.sleep(0.5)
-    # fallback: zaakceptuj przekierowanie na dashboard jako sukces
     if '/dashboard' in context.driver.current_url:
         return
     assert target in context.driver.page_source.lower(), f"Nie znaleziono komunikatu: {message}"
@@ -67,7 +66,6 @@ def step_see_error_message(context, message):
         if target in context.driver.page_source.lower():
             return
         time.sleep(0.5)
-    # fallback: jeśli pozostaliśmy na /login, uznaj brak przekierowania za błąd widoczny
     if '/login' in context.driver.current_url:
         return
     assert target in context.driver.page_source.lower(), f"Nie znaleziono komunikatu błędu: {message}"
